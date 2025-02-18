@@ -1,2 +1,9 @@
 # deps
 node_modules/
+
+# Ignore all .env files
+.env
+.env.*  
+
+# Allow .env.example
+!.env.example
