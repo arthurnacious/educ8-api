@@ -1,7 +1,8 @@
 {
   "name": "api",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "seed": "bun run src/db/seeds/index.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.39.3",
@@ -9,6 +10,7 @@
     "pg": "^8.13.3"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.5.0",
     "@types/bun": "latest",
     "@types/pg": "^8.11.11",
     "drizzle-kit": "^0.30.4"
