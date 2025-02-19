@@ -32,6 +32,6 @@ export async function departmentsSeeder(length: number) {
     .insert(departmentsTable)
     .values(departments)
     .returning();
-  console.log(`${length} new departments seeded!`);
+  console.log(`${length} new department seeded!`);
   return inserteddepartments;
 }

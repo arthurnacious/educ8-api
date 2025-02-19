@@ -4,20 +4,6 @@ import { slugify } from "@/utils";
 import { usersTable } from "../schema";
 import { RoleName } from "@/types/roles";
 
-const generateUniqueEmail = (
-  setSlugs: string[]
-): { slug: string; name: string } => {
-  while (true) {
-    const name = faker.commerce.department();
-    const slug = slugify(name);
-
-    if (!setSlugs.includes(slug)) {
-      setSlugs.push(slug);
-      return { slug, name };
-    }
-  }
-};
-
 export async function userSeeder(length: number) {
   await db.delete(usersTable);
   const users = Array.from({ length: length }, (_, idx) => ({
