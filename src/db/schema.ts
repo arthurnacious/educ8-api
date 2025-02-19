@@ -26,25 +26,17 @@ export const attendanceStatusEnum = pgEnum(
   Object.values(AttendanceName) as [AttendanceName, ...AttendanceName[]]
 );
 
-export const usersTable = pgTable(
-  "users",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    name: varchar("name", { length: 255 }).notNull(),
-    email: varchar("email", { length: 255 }).unique(),
-    emailVerified: timestamp("emailVerified", { mode: "date" }),
-    passwordHash: varchar("password_hash", { length: 255 }),
-    role: userRoleEnum("role").notNull(),
-    image: varchar("image", { length: 255 }),
-  },
-  (table) => {
-    return {
-      idx_role: index("idx_role").on(table.role),
-    };
-  }
-);
+export const usersTable = pgTable("users", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).unique(),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  passwordHash: varchar("password_hash", { length: 255 }),
+  role: userRoleEnum("role").notNull(),
+  image: varchar("image", { length: 255 }),
+});
 
 export const departmentsTable = pgTable("departments", {
   id: text("id")
