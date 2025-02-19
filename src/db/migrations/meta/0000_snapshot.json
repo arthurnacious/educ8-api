@@ -1,5 +1,5 @@
 {
-  "id": "7517b3a8-0b25-42fd-9e64-f9352cf52188",
+  "id": "6116fa8c-aa70-4ca5-b7fb-f328338c7255",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -694,7 +694,7 @@
           "name": "password_hash",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "role": {
           "name": "role",
@@ -710,7 +710,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_role": {
+          "name": "idx_role",
+          "columns": [
+            {
+              "expression": "role",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -751,11 +767,11 @@
       "name": "user_role",
       "schema": "public",
       "values": [
-        "admin",
-        "department_leader",
-        "lecturer",
-        "student",
-        "guardian"
+        "Admin",
+        "Department Leader",
+        "Lecturer",
+        "Finance",
+        "Student"
       ]
     }
   },

@@ -1,6 +1,6 @@
 CREATE TYPE "public"."attendance_status" AS ENUM('Present', 'Late', 'Absent', 'Sick');--> statement-breakpoint
 CREATE TYPE "public"."payment_method" AS ENUM('cash', 'eft', 'payment_gateway');--> statement-breakpoint
-CREATE TYPE "public"."user_role" AS ENUM('admin', 'department_leader', 'lecturer', 'student', 'guardian');--> statement-breakpoint
+CREATE TYPE "public"."user_role" AS ENUM('Admin', 'Department Leader', 'Lecturer', 'Finance', 'Student');--> statement-breakpoint
 CREATE TABLE "attendance" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
 	"studentId" varchar(255) NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE "users" (
 	"name" varchar(255) NOT NULL,
 	"email" varchar(255),
 	"emailVerified" timestamp,
-	"password_hash" varchar(255) NOT NULL,
+	"password_hash" varchar(255),
 	"role" "user_role" NOT NULL,
 	"image" varchar(255),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
@@ -106,4 +106,5 @@ ALTER TABLE "mark" ADD CONSTRAINT "mark_fieldId_field_id_fk" FOREIGN KEY ("field
 ALTER TABLE "mark" ADD CONSTRAINT "mark_studentId_users_id_fk" FOREIGN KEY ("studentId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_lessonRosterId_lessonRoster_id_fk" FOREIGN KEY ("lessonRosterId") REFERENCES "public"."lessonRoster"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "studentToLessonRoster" ADD CONSTRAINT "studentToLessonRoster_studentId_users_id_fk" FOREIGN KEY ("studentId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "studentToLessonRoster" ADD CONSTRAINT "studentToLessonRoster_lessonRosterId_lessonRoster_id_fk" FOREIGN KEY ("lessonRosterId") REFERENCES "public"."lessonRoster"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "studentToLessonRoster" ADD CONSTRAINT "studentToLessonRoster_lessonRosterId_lessonRoster_id_fk" FOREIGN KEY ("lessonRosterId") REFERENCES "public"."lessonRoster"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "idx_role" ON "users" USING btree ("role");

@@ -1,6 +1,6 @@
 export enum RoleName {
   ADMIN = "Admin",
-  ACADEMYHEAD = "Academy Head",
+  DEPARTMENTLEADER = "Department Leader",
   LECTURER = "Lecturer",
   FINANCE = "Finance",
   STUDENT = "Student",

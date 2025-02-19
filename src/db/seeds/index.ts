@@ -1,10 +1,9 @@
 import { departmentsSeeder } from "./departments";
+import { userSeeder } from "./users";
 
 async function main() {
-  // const users = await userSeeder(100);
+  const users = await userSeeder(1000);
   const departments = await departmentsSeeder(20);
-
-  console.log({ departments });
 }
 
 main();

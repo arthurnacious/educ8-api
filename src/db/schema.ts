@@ -6,16 +6,15 @@ import {
   pgEnum,
   varchar,
   numeric,
+  index,
 } from "drizzle-orm/pg-core";
 import { AttendanceName } from "@/types/attendance";
+import { RoleName } from "@/types/roles";
 
-export const userRoleEnum = pgEnum("user_role", [
-  "admin",
-  "department_leader",
-  "lecturer",
-  "student",
-  "guardian",
-]);
+export const userRoleEnum = pgEnum(
+  "user_role",
+  Object.values(RoleName) as [RoleName, ...RoleName[]]
+);
 export const paymentMethodEnum = pgEnum("payment_method", [
   "cash",
   "eft",
@@ -27,17 +26,25 @@ export const attendanceStatusEnum = pgEnum(
   Object.values(AttendanceName) as [AttendanceName, ...AttendanceName[]]
 );
 
-export const usersTable = pgTable("users", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).unique(),
-  emailVerified: timestamp("emailVerified", { mode: "date" }),
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-  role: userRoleEnum("role").notNull(),
-  image: varchar("image", { length: 255 }),
-});
+export const usersTable = pgTable(
+  "users",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).unique(),
+    emailVerified: timestamp("emailVerified", { mode: "date" }),
+    passwordHash: varchar("password_hash", { length: 255 }),
+    role: userRoleEnum("role").notNull(),
+    image: varchar("image", { length: 255 }),
+  },
+  (table) => {
+    return {
+      idx_role: index("idx_role").on(table.role),
+    };
+  }
+);
 
 export const departmentsTable = pgTable("departments", {
   id: text("id")
