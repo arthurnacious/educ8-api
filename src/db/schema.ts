@@ -168,8 +168,16 @@ export const userToDepartment = pgTable("userToDepartment", {
   role: departmentUserRoleEnum("role").notNull(),
 });
 
-///relations
+export const parentDepandants = pgTable("userToDepartment", {
+  guardianId: varchar("guardianId", { length: 255 }) // Clearly denotes a guardian
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  dependentId: varchar("dependentId", { length: 255 }) // Clearly denotes a dependent
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+});
 
+///relations
 export const usersRelations = relations(usersTable, ({ many }) => ({
   departments: many(userToDepartment, {
     relationName: "Userdepartments",
@@ -182,5 +190,11 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   presentedClasses: many(lessonRostersTable, {
     relationName: "usersPresentedClasses",
+  }),
+  guardians: many(parentDepandants, {
+    relationName: "usersGuardians",
+  }),
+  dependents: many(parentDepandants, {
+    relationName: "usersDependents", // will thin of this through
   }),
 }));
