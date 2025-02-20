@@ -28,7 +28,7 @@ export const attendanceStatusEnum = pgEnum(
 );
 
 export const departmentUserRoleEnum = pgEnum(
-  "user_role",
+  "role",
   Object.values(departmentUserRole) as [
     departmentUserRole,
     ...departmentUserRole[]
@@ -140,7 +140,7 @@ export const attendanceTable = pgTable("attendance", {
   type: attendanceStatusEnum("type").default(AttendanceName.PRESENT).notNull(),
 });
 
-export const coursesToAcademies = pgTable("courseToAcademy", {
+export const coursesToDepartments = pgTable("courseToDepartments", {
   courseId: varchar("courseId", { length: 255 })
     .notNull()
     .references(() => coursesTable.id, { onDelete: "cascade" }),
@@ -165,5 +165,5 @@ export const userToDepartment = pgTable("userToDepartment", {
   userId: varchar("userId", { length: 255 })
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  departmentUserRoleEnum: userRoleEnum("role").notNull(),
+  role: departmentUserRoleEnum("role").notNull(),
 });

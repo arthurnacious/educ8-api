@@ -2,7 +2,6 @@ import { faker } from "@faker-js/faker";
 import db from "..";
 import { slugify } from "@/utils";
 import { coursesTable } from "../schema";
-import { sql } from "drizzle-orm";
 
 const generateUniqueSlug = (
   existingSlugs: Set<string>
@@ -10,17 +9,14 @@ const generateUniqueSlug = (
   // Set maximum attempts to avoid infinite loops
   const maxAttempts = 100;
   let attempts = 0;
-
   while (attempts < maxAttempts) {
     attempts++;
     const name = faker.commerce.department();
     const slug = slugify(name);
-
     if (!existingSlugs.has(slug)) {
       existingSlugs.add(slug);
       return { slug, name };
     }
-
     // Try with a random suffix if base name is taken
     const slugWithSuffix = `${slug}-${Math.floor(Math.random() * 1000)}`;
     if (!existingSlugs.has(slugWithSuffix)) {
@@ -28,7 +24,6 @@ const generateUniqueSlug = (
       return { slug: slugWithSuffix, name };
     }
   }
-
   // Fallback: use timestamp for guaranteed uniqueness
   const timestamp = Date.now();
   const fallbackName = `Course ${timestamp}`;
@@ -51,23 +46,39 @@ export async function coursesSeeder(length: number) {
   }
 
   const existingSlugs = new Set<string>();
-  const coursesData = [];
+  const batchSize = 100;
+  let totalInserted = 0;
 
-  for (let i = 0; i < length; i++) {
-    // Randomly select a department without DB query
-    const department =
-      departments[Math.floor(Math.random() * departments.length)];
+  while (totalInserted < length) {
+    // Calculate current batch size
+    const currentBatchSize = Math.min(batchSize, length - totalInserted);
+    const coursesData = [];
 
-    const { slug, name } = generateUniqueSlug(existingSlugs);
+    // Generate the current batch of courses
+    for (let i = 0; i < currentBatchSize; i++) {
+      // Randomly select a department
+      const department =
+        departments[Math.floor(Math.random() * departments.length)];
+      const { slug, name } = generateUniqueSlug(existingSlugs);
 
-    coursesData.push({
-      name,
-      slug,
-      departmentId: department.id,
-      description: faker.lorem.paragraph(),
-    });
+      coursesData.push({
+        name,
+        slug,
+        departmentId: department.id,
+        description: faker.lorem.paragraph(),
+      });
+    }
+
+    // Insert current batch
+    await db.insert(coursesTable).values(coursesData);
+
+    totalInserted += currentBatchSize;
+    console.log(
+      `Batch inserted: ${currentBatchSize} courses (Total: ${totalInserted}/${length})`
+    );
   }
 
-  await db.insert(coursesTable).values(coursesData).returning();
-  console.log(`${length} new courses seeded!`);
+  console.log(
+    `Seeding complete: ${totalInserted} courses inserted in batches of ${batchSize}`
+  );
 }
