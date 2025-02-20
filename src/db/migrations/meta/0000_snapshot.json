@@ -1,5 +1,5 @@
 {
-  "id": "6116fa8c-aa70-4ca5-b7fb-f328338c7255",
+  "id": "422cce18-948a-460b-b5f9-08b3cc7ec11e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -201,58 +201,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.departmentLeadersToAcademy": {
-      "name": "departmentLeadersToAcademy",
-      "schema": "",
-      "columns": {
-        "departmentId": {
-          "name": "departmentId",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "departmentLeaderId": {
-          "name": "departmentLeaderId",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "departmentLeadersToAcademy_departmentId_departments_id_fk": {
-          "name": "departmentLeadersToAcademy_departmentId_departments_id_fk",
-          "tableFrom": "departmentLeadersToAcademy",
-          "tableTo": "departments",
-          "columnsFrom": [
-            "departmentId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "departmentLeadersToAcademy_departmentLeaderId_users_id_fk": {
-          "name": "departmentLeadersToAcademy_departmentLeaderId_users_id_fk",
-          "tableFrom": "departmentLeadersToAcademy",
-          "tableTo": "users",
-          "columnsFrom": [
-            "departmentLeaderId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.departments": {
       "name": "departments",
       "schema": "",
@@ -337,58 +285,6 @@
           "tableTo": "course",
           "columnsFrom": [
             "courseId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.lecturerToAcademy": {
-      "name": "lecturerToAcademy",
-      "schema": "",
-      "columns": {
-        "departmentId": {
-          "name": "departmentId",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lecturerId": {
-          "name": "lecturerId",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "lecturerToAcademy_departmentId_departments_id_fk": {
-          "name": "lecturerToAcademy_departmentId_departments_id_fk",
-          "tableFrom": "lecturerToAcademy",
-          "tableTo": "departments",
-          "columnsFrom": [
-            "departmentId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "lecturerToAcademy_lecturerId_users_id_fk": {
-          "name": "lecturerToAcademy_lecturerId_users_id_fk",
-          "tableFrom": "lecturerToAcademy",
-          "tableTo": "users",
-          "columnsFrom": [
-            "lecturerId"
           ],
           "columnsTo": [
             "id"
@@ -662,6 +558,65 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.userToDepartment": {
+      "name": "userToDepartment",
+      "schema": "",
+      "columns": {
+        "departmentId": {
+          "name": "departmentId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "user_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "userToDepartment_departmentId_departments_id_fk": {
+          "name": "userToDepartment_departmentId_departments_id_fk",
+          "tableFrom": "userToDepartment",
+          "tableTo": "departments",
+          "columnsFrom": [
+            "departmentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "userToDepartment_userId_users_id_fk": {
+          "name": "userToDepartment_userId_users_id_fk",
+          "tableFrom": "userToDepartment",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -710,23 +665,7 @@
           "notNull": false
         }
       },
-      "indexes": {
-        "idx_role": {
-          "name": "idx_role",
-          "columns": [
-            {
-              "expression": "role",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -754,6 +693,16 @@
         "Sick"
       ]
     },
+    "public.user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "values": [
+        "Admin",
+        "Finance",
+        "Staff",
+        "Student"
+      ]
+    },
     "public.payment_method": {
       "name": "payment_method",
       "schema": "public",
@@ -761,17 +710,6 @@
         "cash",
         "eft",
         "payment_gateway"
-      ]
-    },
-    "public.user_role": {
-      "name": "user_role",
-      "schema": "public",
-      "values": [
-        "Admin",
-        "Department Leader",
-        "Lecturer",
-        "Finance",
-        "Student"
       ]
     }
   },

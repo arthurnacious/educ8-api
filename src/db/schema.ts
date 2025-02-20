@@ -158,23 +158,11 @@ export const studentsToLessonRosters = pgTable("studentToLessonRoster", {
     .references(() => lessonRostersTable.id, { onDelete: "cascade" }),
 });
 
-export const departmentLeadersToDepartments = pgTable(
-  "departmentLeadersToAcademy",
-  {
-    departmentId: varchar("departmentId", { length: 255 })
-      .notNull()
-      .references(() => departmentsTable.id, { onDelete: "cascade" }),
-    departmentLeaderId: varchar("departmentLeaderId", { length: 255 })
-      .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
-  }
-);
-
-export const lecturerToAcademy = pgTable("lecturerToAcademy", {
+export const userToDepartment = pgTable("userToDepartment", {
   departmentId: varchar("departmentId", { length: 255 })
     .notNull()
     .references(() => departmentsTable.id, { onDelete: "cascade" }),
-  lecturerId: varchar("lecturerId", { length: 255 })
+  userId: varchar("userId", { length: 255 })
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
   departmentUserRoleEnum: userRoleEnum("role").notNull(),
