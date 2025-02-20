@@ -3,23 +3,23 @@ import { JwtVariables } from "hono/jwt";
 import { authMiddleware } from "../middleware/auth";
 import db from "@/db";
 
-const departments = new Hono<{ Variables: JwtVariables }>();
-departments.use("*", authMiddleware);
+const lessonRosters = new Hono<{ Variables: JwtVariables }>();
+lessonRosters.use("*", authMiddleware);
 
-departments
+lessonRosters
   .get("/", async (ctx) => {
-    const data = await db.query.departmentsTable.findMany();
+    const data = await db.query.lessonRostersTable.findMany();
 
     return ctx.json({ data });
   })
   .get("/:slug", async (ctx) => {
     const { slug } = ctx.req.param();
 
-    const data = await db.query.departmentsTable.findFirst({
-      where: (department, { eq }) => eq(department.slug, slug),
+    const data = await db.query.lessonRostersTable.findFirst({
+      where: (roster, { eq }) => eq(roster.slug, slug),
     });
 
     return ctx.json({ data });
   });
 
-export default departments;
+export default lessonRosters;

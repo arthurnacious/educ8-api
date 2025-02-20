@@ -167,3 +167,20 @@ export const userToDepartment = pgTable("userToDepartment", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   role: departmentUserRoleEnum("role").notNull(),
 });
+
+///relations
+
+export const usersRelations = relations(usersTable, ({ many }) => ({
+  departments: many(userToDepartment, {
+    relationName: "Userdepartments",
+  }),
+  classes: many(studentsToLessonRosters, {
+    relationName: "attendedClasses",
+  }),
+  mark: many(marks, {
+    relationName: "usersMark",
+  }),
+  presentedClasses: many(lessonRostersTable, {
+    relationName: "usersPresentedClasses",
+  }),
+}));
