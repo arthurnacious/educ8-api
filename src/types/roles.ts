@@ -1,7 +1,11 @@
-export enum RoleName {
+export enum userRole {
   ADMIN = "Admin",
-  DEPARTMENTLEADER = "Department Leader",
-  LECTURER = "Lecturer",
   FINANCE = "Finance",
-  STUDENT = "Student",
+  STUFF = "Staff",
+}
+
+export enum departmentUserRole {
+  LECTURER = "Lecturer",
+  DEPARTMENTLEADER = "Department Leader",
+  STUDENT = "Student", //might use this later. not too sure
 }

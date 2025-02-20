@@ -9,12 +9,13 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { AttendanceName } from "@/types/attendance";
-import { RoleName } from "@/types/roles";
+import { departmentUserRole, userRole } from "@/types/roles";
 
 export const userRoleEnum = pgEnum(
   "user_role",
-  Object.values(RoleName) as [RoleName, ...RoleName[]]
+  Object.values(userRole) as [userRole, ...userRole[]]
 );
+
 export const paymentMethodEnum = pgEnum("payment_method", [
   "cash",
   "eft",
@@ -24,6 +25,14 @@ export const paymentMethodEnum = pgEnum("payment_method", [
 export const attendanceStatusEnum = pgEnum(
   "attendance_status",
   Object.values(AttendanceName) as [AttendanceName, ...AttendanceName[]]
+);
+
+export const departmentUserRoleEnum = pgEnum(
+  "user_role",
+  Object.values(departmentUserRole) as [
+    departmentUserRole,
+    ...departmentUserRole[]
+  ]
 );
 
 export const usersTable = pgTable("users", {
@@ -168,4 +177,5 @@ export const lecturerToAcademy = pgTable("lecturerToAcademy", {
   lecturerId: varchar("lecturerId", { length: 255 })
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
+  departmentUserRoleEnum: userRoleEnum("role").notNull(),
 });
