@@ -198,3 +198,200 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
     relationName: "usersDependents", // will thin of this through
   }),
 }));
+
+//! Relationships
+// Users Relations
+export const usersRelations = relations(usersTable, ({ many }) => ({
+  // User's department affiliations
+  departmentMemberships: many(userToDepartment),
+  
+  // Classes the user is enrolled in (as a student)
+  enrolledClasses: many(studentsToLessonRosters),
+  
+  // User's marks/grades
+  marks: many(marks, { relationName: "studentMarks" }),
+  
+  // Classes created by this user (as a teacher/instructor)
+  createdLessonRosters: many(lessonRostersTable, { relationName: "lessonCreator" }),
+  
+  // Attendance records
+  attendanceRecords: many(attendanceTable, { relationName: "studentAttendance" }),
+  
+  // Guardian relationships - where this user is the guardian
+  dependents: many(parentDepandants, { 
+    relationName: "guardianToDependents",
+    foreignKey: "guardianId"
+  }),
+  
+  // Dependent relationships - where this user is the dependent
+  guardians: many(parentDepandants, {
+    relationName: "dependentToGuardians",
+    foreignKey: "dependentId"
+  })
+}));
+
+// Department Relations
+export const departmentsRelations = relations(departmentsTable, ({ many }) => ({
+  // Courses in this department
+  courses: many(coursesToDepartments),
+  
+  // Users affiliated with this department
+  members: many(userToDepartment)
+}));
+
+// Course Relations
+export const coursesRelations = relations(coursesTable, ({ one, many }) => ({
+  // Department this course belongs to
+  department: one(departmentsTable, {
+    fields: [coursesTable.departmentId],
+    references: [departmentsTable.id]
+  }),
+  
+  // Fields/subjects within this course
+  fields: many(fields),
+  
+  // Lesson rosters for this course
+  lessonRosters: many(lessonRostersTable),
+  
+  // Department connections (for cross-listed courses)
+  departmentConnections: many(coursesToDepartments)
+}));
+
+// Field Relations
+export const fieldsRelations = relations(fields, ({ one, many }) => ({
+  // Course this field belongs to
+  course: one(coursesTable, {
+    fields: [fields.courseId],
+    references: [coursesTable.id]
+  }),
+  
+  // Marks/grades associated with this field
+  marks: many(marks)
+}));
+
+// Lesson Roster Relations
+export const lessonRostersRelations = relations(lessonRostersTable, ({ one, many }) => ({
+  // Course this lesson roster belongs to
+  course: one(coursesTable, {
+    fields: [lessonRostersTable.courseId],
+    references: [coursesTable.id]
+  }),
+  
+  // Creator of this lesson roster
+  creator: one(usersTable, {
+    fields: [lessonRostersTable.creatorId],
+    references: [usersTable.id]
+  }),
+  
+  // Sessions/periods in this lesson roster
+  sessions: many(sessionsTable),
+  
+  // Students enrolled in this lesson roster
+  enrolledStudents: many(studentsToLessonRosters)
+}));
+
+// Marks Relations
+export const marksRelations = relations(marks, ({ one }) => ({
+  // Field this mark belongs to
+  field: one(fields, {
+    fields: [marks.fieldId],
+    references: [fields.id]
+  }),
+  
+  // Student who received this mark
+  student: one(usersTable, {
+    fields: [marks.studentId],
+    references: [usersTable.id],
+    relationName: "studentMarks"
+  })
+}));
+
+// Sessions Relations
+export const sessionsRelations = relations(sessionsTable, ({ one, many }) => ({
+  // Lesson roster this session belongs to
+  lessonRoster: one(lessonRostersTable, {
+    fields: [sessionsTable.lessonRosterId],
+    references: [lessonRostersTable.id]
+  }),
+  
+  // Attendance records for this session
+  attendanceRecords: many(attendanceTable)
+}));
+
+// Attendance Relations
+export const attendanceRelations = relations(attendanceTable, ({ one }) => ({
+  // Student whose attendance is recorded
+  student: one(usersTable, {
+    fields: [attendanceTable.studentId],
+    references: [usersTable.id],
+    relationName: "studentAttendance"
+  }),
+  
+  // Session this attendance record belongs to
+  session: one(sessionsTable, {
+    fields: [attendanceTable.periodId],
+    references: [sessionsTable.id]
+  })
+}));
+
+// CoursesToDepartments Relations
+export const coursesToDepartmentsRelations = relations(coursesToDepartments, ({ one }) => ({
+  // Course in this relationship
+  course: one(coursesTable, {
+    fields: [coursesToDepartments.courseId],
+    references: [coursesTable.id]
+  }),
+  
+  // Department in this relationship
+  department: one(departmentsTable, {
+    fields: [coursesToDepartments.departmentId],
+    references: [departmentsTable.id]
+  })
+}));
+
+// StudentsToLessonRosters Relations
+export const studentsToLessonRostersRelations = relations(studentsToLessonRosters, ({ one }) => ({
+  // Student in this enrollment
+  student: one(usersTable, {
+    fields: [studentsToLessonRosters.studentId],
+    references: [usersTable.id]
+  }),
+  
+  // Lesson roster the student is enrolled in
+  lessonRoster: one(lessonRostersTable, {
+    fields: [studentsToLessonRosters.lessonRosterId],
+    references: [lessonRostersTable.id]
+  })
+}));
+
+// UserToDepartment Relations
+export const userToDepartmentRelations = relations(userToDepartment, ({ one }) => ({
+  // User in this department membership
+  user: one(usersTable, {
+    fields: [userToDepartment.userId],
+    references: [usersTable.id]
+  }),
+  
+  // Department the user belongs to
+  department: one(departmentsTable, {
+    fields: [userToDepartment.departmentId],
+    references: [departmentsTable.id]
+  })
+}));
+
+// ParentDependents Relations (Guardian-Dependent relationship)
+export const parentDependantsRelations = relations(parentDepandants, ({ one }) => ({
+  // Guardian user
+  guardian: one(usersTable, {
+    fields: [parentDepandants.guardianId],
+    references: [usersTable.id],
+    relationName: "guardianToDependents"
+  }),
+  
+  // Dependent user
+  dependent: one(usersTable, {
+    fields: [parentDepandants.dependentId],
+    references: [usersTable.id],
+    relationName: "dependentToGuardians"
+  })
+}));
