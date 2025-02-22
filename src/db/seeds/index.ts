@@ -10,7 +10,7 @@ import { sessionsSeeder } from "./sessions";
 import { userSeeder } from "./users";
 
 async function main() {
-  await userSeeder(50000);
+  await userSeeder(1000000);
   await departmentsSeeder(20);
   await coursesSeeder(10000);
   await fieldsSeeder(3);

@@ -6,7 +6,7 @@ import { userRole } from "@/types/roles";
 export async function userSeeder(length: number) {
   await db.delete(usersTable);
 
-  const batchSize = 100;
+  const batchSize = 1000;
   let totalInserted = 0;
 
   while (totalInserted < length) {

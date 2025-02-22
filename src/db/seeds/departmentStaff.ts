@@ -25,7 +25,7 @@ export async function departmentStaffSeeder() {
     .select()
     .from(usersTable)
     .where(eq(usersTable.role, userRole.STAFF))
-    .limit(20);
+    .limit(200);
 
   if (staffUsers.length === 0) {
     console.log("No staff users found. Please seed users first.");
@@ -44,7 +44,7 @@ export async function departmentStaffSeeder() {
     departmentStaffData.push({
       userId: staffUsers[leaderIndex].id,
       departmentId: department.id,
-      role: departmentUserRole.DEPARTMENTLEADER,
+      role: departmentUserRole.LEADER,
     });
   }
 
@@ -52,9 +52,7 @@ export async function departmentStaffSeeder() {
   for (const staff of staffUsers) {
     if (
       departmentStaffData.some(
-        (ds) =>
-          ds.userId === staff.id &&
-          ds.role === departmentUserRole.DEPARTMENTLEADER
+        (ds) => ds.userId === staff.id && ds.role === departmentUserRole.LEADER
       )
     ) {
       continue;

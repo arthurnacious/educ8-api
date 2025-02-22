@@ -7,6 +7,6 @@ export enum userRole {
 
 export enum departmentUserRole {
   LECTURER = "Lecturer",
-  DEPARTMENTLEADER = "Department Leader",
+  LEADER = "Leader",
   STUDENT = "Student", //might use this later. not too sure
 }
