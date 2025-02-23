@@ -6,6 +6,7 @@ import {
   pgEnum,
   varchar,
   numeric,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { AttendanceName } from "@/types/attendance";
 import { departmentUserRole, userRole } from "@/types/roles";
@@ -34,20 +35,48 @@ export const departmentUserRoleEnum = pgEnum(
   ]
 );
 
+export const rolesTable = pgTable("roles", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: userRoleEnum("role").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const usersTable = pgTable("users", {
-  id: text("id")
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   passwordHash: varchar("password_hash", { length: 255 }),
-  role: userRoleEnum("role").notNull(),
+  roleId: uuid("role_id").references(() => rolesTable.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
   image: varchar("image", { length: 255 }),
 });
 
+export const privilegesTable = pgTable("privileges", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(), // e.g., 'can_edit_users'
+  roleId: uuid("role_id").references(() => rolesTable.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+  userId: uuid("user_id").references(() => usersTable.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+});
+
 export const departmentsTable = pgTable("departments", {
-  id: text("id")
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
@@ -59,12 +88,15 @@ export const departmentsTable = pgTable("departments", {
 });
 
 export const coursesTable = pgTable("course", {
-  id: varchar("id", { length: 255 })
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  departmentId: varchar("departmentId", { length: 255 })
+  departmentId: uuid("departmentId")
     .notNull()
-    .references(() => departmentsTable.id, { onDelete: "cascade" }),
+    .references(() => departmentsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   name: varchar("name", { length: 255 }),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
   description: text("description"),
@@ -75,28 +107,37 @@ export const coursesTable = pgTable("course", {
 });
 
 export const fields = pgTable("field", {
-  id: varchar("id", { length: 255 })
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  courseId: varchar("courseId", { length: 255 })
+  courseId: uuid("courseId")
     .notNull()
-    .references(() => coursesTable.id, { onDelete: "cascade" }),
+    .references(() => coursesTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   name: varchar("name", { length: 255 }).notNull(),
 });
 
 export const lessonRostersTable = pgTable("lessonRoster", {
-  id: varchar("id", { length: 255 })
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  courseId: varchar("courseId", { length: 255 })
+  courseId: uuid("courseId")
     .notNull()
-    .references(() => coursesTable.id, { onDelete: "cascade" }),
-  creatorId: varchar("creatorId", { length: 255 })
+    .references(() => coursesTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  creatorId: uuid("creatorId")
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   name: varchar("name", { length: 255 }),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
-  notes: varchar("notes", { length: 255 }),
+  notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
@@ -104,83 +145,128 @@ export const lessonRostersTable = pgTable("lessonRoster", {
 });
 
 export const marks = pgTable("mark", {
-  id: varchar("id", { length: 255 })
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  fieldId: varchar("fieldId", { length: 255 })
+  fieldId: uuid("fieldId")
     .notNull()
-    .references(() => fields.id, { onDelete: "cascade" }),
-  studentId: varchar("studentId", { length: 255 })
+    .references(() => fields.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  studentId: uuid("studentId")
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
 });
 
 export const sessionsTable = pgTable("sessions", {
-  id: varchar("id", { length: 255 })
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  lessonRosterId: varchar("lessonRosterId", { length: 255 })
+  lessonRosterId: uuid("lessonRosterId")
     .notNull()
-    .references(() => lessonRostersTable.id, { onDelete: "cascade" }),
+    .references(() => lessonRostersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   name: varchar("name", { length: 255 }).notNull(),
 });
 
 export const attendanceTable = pgTable("attendance", {
-  id: varchar("id", { length: 255 })
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  studentId: varchar("studentId", { length: 255 })
+  studentId: uuid("studentId")
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  periodId: varchar("periodId", { length: 255 })
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  periodId: uuid("periodId")
     .notNull()
-    .references(() => sessionsTable.id, { onDelete: "cascade" }),
+    .references(() => sessionsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   type: attendanceStatusEnum("type").default(AttendanceName.PRESENT).notNull(),
 });
 
 export const coursesToDepartments = pgTable("courseToDepartments", {
-  courseId: varchar("courseId", { length: 255 })
+  courseId: uuid("courseId")
     .notNull()
-    .references(() => coursesTable.id, { onDelete: "cascade" }),
-  departmentId: varchar("departmentId", { length: 255 })
+    .references(() => coursesTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  departmentId: uuid("departmentId")
     .notNull()
-    .references(() => departmentsTable.id, { onDelete: "cascade" }),
+    .references(() => departmentsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
 });
 
 export const studentsToLessonRosters = pgTable("studentToLessonRoster", {
-  studentId: varchar("studentId", { length: 255 })
+  studentId: uuid("studentId")
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  lessonRosterId: varchar("lessonRosterId", { length: 255 })
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  lessonRosterId: uuid("lessonRosterId")
     .notNull()
-    .references(() => lessonRostersTable.id, { onDelete: "cascade" }),
+    .references(() => lessonRostersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
 });
 
 export const userToDepartment = pgTable("userToDepartment", {
-  departmentId: varchar("departmentId", { length: 255 })
+  departmentId: uuid("departmentId")
     .notNull()
-    .references(() => departmentsTable.id, { onDelete: "cascade" }),
-  userId: varchar("userId", { length: 255 })
+    .references(() => departmentsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  userId: uuid("userId")
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   role: departmentUserRoleEnum("role").notNull(),
 });
 
 export const parentDepandants = pgTable("userToDepartment", {
-  guardianId: varchar("guardianId", { length: 255 }) // Clearly denotes a guardian
+  guardianId: uuid("guardianId") // Clearly denotes a guardian
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  dependentId: varchar("dependentId", { length: 255 }) // Clearly denotes a dependent
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  dependentId: uuid("dependentId") // Clearly denotes a dependent
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
 });
 
 //? Relationships
 // Users Relations
-export const usersRelations = relations(usersTable, ({ many }) => ({
+export const usersRelations = relations(usersTable, ({ many, one }) => ({
   // User's department affiliations
   departmentMemberships: many(userToDepartment),
+
+  // User's roles
+  roles: one(rolesTable, {
+    fields: [usersTable.roleId],
+    references: [rolesTable.id],
+  }),
 
   // Classes the user is enrolled in (as a student)
   enrolledClasses: many(studentsToLessonRosters),

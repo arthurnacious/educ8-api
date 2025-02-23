@@ -46,7 +46,7 @@ export async function coursesSeeder(length: number) {
   }
 
   const existingSlugs = new Set<string>();
-  const batchSize = 100;
+  const batchSize = 500;
   let totalInserted = 0;
 
   while (totalInserted < length) {
@@ -61,9 +61,11 @@ export async function coursesSeeder(length: number) {
         departments[Math.floor(Math.random() * departments.length)];
       const { slug, name } = generateUniqueSlug(existingSlugs);
 
+      const slugC = i === 0 ? slug : `${slug}-${i}`; // just incase i dont get unique slug because of the batch size
+
       coursesData.push({
         name,
-        slug,
+        slug: slugC,
         departmentId: department.id,
         description: faker.lorem.paragraph(),
       });

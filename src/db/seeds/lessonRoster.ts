@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import db from "..";
-import { lessonRostersTable, usersTable } from "../schema";
+import { lessonRostersTable, rolesTable, usersTable } from "../schema";
 import { userRole } from "@/types/roles";
 import { eq } from "drizzle-orm";
 import { slugify } from "@/utils";
@@ -19,10 +19,18 @@ export async function lessonRosterSeeder(count = 500) {
   }
 
   // Get staff users (as creators)
-  const staffUsers = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.role, userRole.STAFF));
+  const staffRoles = await db.query.rolesTable.findMany({
+    where: eq(rolesTable.name, userRole.STAFF),
+    with: {
+      users: {
+        columns: [usersTable.id],
+      },
+    },
+  });
+
+  const staffUsers = staffRoles.flatMap((role) => role.users) as {
+    id: string;
+  }[];
 
   if (staffUsers.length === 0) {
     console.log("No staff users found. Please seed users first.");
@@ -42,7 +50,7 @@ export async function lessonRosterSeeder(count = 500) {
     lessonRosterData.push({
       id: crypto.randomUUID(),
       courseId: courses[Math.floor(Math.random() * courses.length)].id,
-      creatorId: staffUsers[Math.floor(Math.random() * staffUsers.length)].id,
+      creatorId: faker.helpers.arrayElement(staffUsers)?.id,
       name: name,
       slug: slugify(name + " " + i),
       notes: faker.lorem.sentence(),
@@ -52,7 +60,7 @@ export async function lessonRosterSeeder(count = 500) {
   }
 
   // Insert in batches of 100
-  const batchSize = 100;
+  const batchSize = 200;
   let totalInserted = 0;
 
   for (let i = 0; i < lessonRosterData.length; i += batchSize) {

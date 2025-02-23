@@ -6,13 +6,17 @@ import { departmentStaffSeeder } from "./departmentStaff";
 import { fieldsSeeder } from "./fields";
 import { lessonRosterSeeder } from "./lessonRoster";
 import { marksSeeder } from "./marks";
+import { privilegesSeeder } from "./privileges";
+import { rolesSeeder } from "./roles";
 import { sessionsSeeder } from "./sessions";
 import { userSeeder } from "./users";
 
 async function main() {
-  await userSeeder(1000000);
+  await rolesSeeder();
+  await userSeeder(1000);
+  await privilegesSeeder(10);
   await departmentsSeeder(20);
-  await coursesSeeder(10000);
+  await coursesSeeder(100000);
   await fieldsSeeder(3);
   await lessonRosterSeeder(2000);
   await sessionsSeeder(500);

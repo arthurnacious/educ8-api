@@ -6,6 +6,12 @@ import { userRole } from "@/types/roles";
 export async function userSeeder(length: number) {
   await db.delete(usersTable);
 
+  const roles = await db.query.rolesTable.findMany({
+    columns: { id: true },
+  });
+
+  const roleIds = roles.map((role) => role.id);
+
   const batchSize = 1000;
   let totalInserted = 0;
 
@@ -19,11 +25,7 @@ export async function userSeeder(length: number) {
       email: totalInserted + idx + faker.internet.email(),
       emailVerified: faker.date.recent(),
       passwordHash: faker.internet.password(),
-      role: faker.helpers.arrayElement([
-        ...Object.values(userRole),
-        userRole.STUDENT,
-        userRole.STUDENT,
-      ]),
+      roleId: faker.helpers.arrayElement(roleIds),
       image: faker.image.avatar(),
     }));
 
