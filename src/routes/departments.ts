@@ -106,6 +106,35 @@ departments
       console.error("Error creating department:", error);
       return ctx.json({ error: "Internal Server Error" }, 500);
     }
+  })
+  .put("/:slug", async (ctx) => {
+    const { slug } = ctx.req.param();
+    try {
+      const body = await ctx.req.json(); // Get request body
+      const validatedData = departmentSchema.safeParse(body); // Validate input
+
+      if (!validatedData.success) {
+        return ctx.json({ error: validatedData.error.format() }, 400);
+      }
+
+      const { name } = validatedData.data;
+
+      const data = await db
+        .update(departmentsTable)
+        .set({
+          name: capitalizeFirstLetter(name),
+          slug: slugify(name),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(departmentsTable.slug, slug))
+        .execute();
+
+      return ctx.json({ data }, 200);
+    } catch (error) {
+      console.error("Error updating department:", error);
+      return ctx.json({ error: "Internal Server Error" }, 500);
+    }
   });
 
 export default departments;
