@@ -95,7 +95,7 @@ departments
       }
 
       const data = await db.insert(departmentsTable).values({
-        name,
+        name: capitalizeFirstLetter(name),
         slug: slugify(name),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -109,3 +109,7 @@ departments
   });
 
 export default departments;
+
+function capitalizeFirstLetter(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
