@@ -66,6 +66,9 @@ departments
 
     const data = await db.query.departmentsTable.findFirst({
       where: (department, { eq }) => eq(department.slug, slug),
+      with: {
+        members: true,
+      },
     });
 
     return ctx.json({ data });

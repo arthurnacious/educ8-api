@@ -4,7 +4,7 @@ import { authMiddleware } from "../middleware/auth";
 import db from "@/db";
 
 const courses = new Hono<{ Variables: JwtVariables }>();
-courses.use("*", authMiddleware);
+// courses.use("*", authMiddleware);
 
 courses
   .get("/", async (ctx) => {
