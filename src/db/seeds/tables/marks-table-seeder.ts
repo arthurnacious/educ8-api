@@ -18,24 +18,21 @@ export async function marksTableSeeder(
 
   const fieldsList = await db.select().from(fields);
   const students = await db.select().from(usersTable);
+
+  const fieldIds = fieldsList.map((field) => field.id);
+  const studentIds = students.map((student) => student.id);
+
   if (fieldsList.length === 0 || students.length === 0) {
     throw new Error("Ensure fields and users are seeded before seeding marks.");
   }
 
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);
-    const marksData = Array.from({ length: batchSize }, (_, index) => {
-      const actualIndex = i + index;
+    const marksData = Array.from({ length: batchSize }, () => {
       return {
-        fieldId:
-          customFields.fieldId?.(actualIndex) ||
-          fieldsList[Math.floor(Math.random() * fieldsList.length)].id,
-        studentId:
-          customFields.studentId?.(actualIndex) ||
-          students[Math.floor(Math.random() * students.length)].id,
-        amount:
-          customFields.amount?.(actualIndex) ||
-          faker.number.float({ min: 0, max: 100, fractionDigits: 0.01 }),
+        fieldId: faker.helpers.arrayElement(fieldIds),
+        studentId: faker.helpers.arrayElement(studentIds),
+        amount: (Math.floor(Math.random() * 100) + 1) as unknown as string,
       };
     });
 

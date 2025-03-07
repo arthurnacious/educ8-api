@@ -4,9 +4,11 @@ import { coursesToDepartmentsSeeder } from "./tables/courses-to-departments-seed
 import { departmentsTableSeeder } from "./tables/departments-table-seeder";
 import { fieldsTableSeeder } from "./tables/fields-table-seeder";
 import { lessonRostersTableSeeder } from "./tables/lesson-rosters-table-seeder";
+import { marksTableSeeder } from "./tables/marks-table-seeder";
 import { privilegesTableSeeder } from "./tables/privileges-table-seeder";
 import { rolesTableSeeder } from "./tables/roles-table-seeder";
 import { sessionsTableSeeder } from "./tables/sessions-table-seeder";
+import { studentsToLessonRostersSeeder } from "./tables/students-to-lesson-rosters";
 import { usersTableSeeder } from "./tables/users-table-seeder";
 
 interface SeedOptions {
@@ -14,12 +16,15 @@ interface SeedOptions {
   privileges?: number;
   roles?: number;
   departments?: number;
+  userToDepartments?: number;
   courses?: number;
   fields?: number;
   lessonrosters?: number;
   sessions?: number;
   attendance?: number;
   coursesToDepartments?: number;
+  studentToLesonRosters?: number;
+  marks?: number;
   batch?: number;
 }
 
@@ -29,12 +34,15 @@ async function seed(options: SeedOptions = {}) {
     privileges = 0,
     roles = 0,
     departments = 0,
+    userToDepartments = 0,
     courses = 0,
     fields = 0,
     lessonrosters = 0,
     sessions = 0,
     attendance = 0,
     coursesToDepartments = 0,
+    studentToLesonRosters = 0,
+    marks = 0,
     batch = 100,
   } = options;
 
@@ -59,6 +67,11 @@ async function seed(options: SeedOptions = {}) {
   if (courses > 0) {
     console.log(`\n--- Seeding ${courses} courses ---`);
     await coursesTableSeeder(courses, { batch });
+  }
+
+  if (userToDepartments > 0) {
+    console.log(`\n--- Seeding ${userToDepartments} userToDepartments ---`);
+    await usersTableSeeder(userToDepartments, { batch });
   }
 
   if (privileges > 0) {
@@ -93,20 +106,35 @@ async function seed(options: SeedOptions = {}) {
     await coursesToDepartmentsSeeder(coursesToDepartments, { batch });
   }
 
+  if (studentToLesonRosters > 0) {
+    console.log(
+      `\n--- Seeding ${studentToLesonRosters} studentToLesonRosters ---`
+    );
+    await studentsToLessonRostersSeeder(studentToLesonRosters, { batch });
+  }
+
+  if (marks > 0) {
+    console.log(`\n--- Seeding ${marks} marks ---`);
+    await marksTableSeeder(marks, { batch });
+  }
+
   console.timeEnd("Seeding database");
 }
 
 // Example usage
 async function main() {
   await seed({
-    users: 2000,
+    users: 20000,
     departments: 20,
-    courses: 10000,
+    userToDepartments: 50,
+    courses: 30000,
     fields: 3,
     lessonrosters: 10,
     sessions: 10,
     attendance: 100,
-    coursesToDepartments: 100,
+    coursesToDepartments: 200,
+    studentToLesonRosters: 300,
+    marks: 100,
     batch: 300,
   });
 }
