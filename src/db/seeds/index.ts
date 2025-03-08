@@ -9,6 +9,7 @@ import { privilegesTableSeeder } from "./tables/privileges-table-seeder";
 import { rolesTableSeeder } from "./tables/roles-table-seeder";
 import { sessionsTableSeeder } from "./tables/sessions-table-seeder";
 import { studentsToLessonRostersSeeder } from "./tables/students-to-lesson-rosters";
+import { userToDepartmentSeeder } from "./tables/user-to-department-seeder";
 import { usersTableSeeder } from "./tables/users-table-seeder";
 
 interface SeedOptions {
@@ -46,6 +47,10 @@ async function seed(options: SeedOptions = {}) {
     batch = 100,
   } = options;
 
+  if (batch === 0) {
+    throw new Error("Batch size cannot be 0");
+  }
+
   console.time("Seeding database");
 
   // Seed users first (if requested)
@@ -71,7 +76,7 @@ async function seed(options: SeedOptions = {}) {
 
   if (userToDepartments > 0) {
     console.log(`\n--- Seeding ${userToDepartments} userToDepartments ---`);
-    await usersTableSeeder(userToDepartments, { batch });
+    await userToDepartmentSeeder(userToDepartments, { batch });
   }
 
   if (privileges > 0) {

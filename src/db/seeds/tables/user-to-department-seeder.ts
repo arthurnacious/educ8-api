@@ -1,5 +1,6 @@
 import db from "@/db";
-import { userToDepartment } from "@/db/schema";
+import { departmentsTable, usersTable, userToDepartment } from "@/db/schema";
+import { departmentUserRole } from "@/types/roles";
 import { faker } from "@faker-js/faker";
 
 interface SeederOptions {
@@ -17,13 +18,27 @@ export async function userToDepartmentSeeder(
     `Seeding ${count} user-department associations in batches of ${batch}...`
   );
 
+  const departments = await db.select().from(departmentsTable);
+  const users = await db.select().from(usersTable);
+  if (departments.length === 0) {
+    console.error("No departments found Please seed departments first.");
+    return;
+  }
+  if (users.length === 0) {
+    console.error("No users found. Please seed users first.");
+    return;
+  }
+  const departmentIds = departments.map((department) => department.id);
+
+  const userIds = users.map((user) => user.id);
+
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);
     const associationData = Array.from({ length: batchSize }, (_, index) => {
       return {
-        departmentId: customFields.departmentId?.(index) || faker.string.uuid(),
-        userId: customFields.userId?.(index) || faker.string.uuid(),
-        role: customFields.role?.(index) || "member",
+        departmentId: faker.helpers.arrayElement(departmentIds),
+        userId: faker.helpers.arrayElement(userIds),
+        role: faker.helpers.arrayElement(Object.values(departmentUserRole)),
       };
     });
 
