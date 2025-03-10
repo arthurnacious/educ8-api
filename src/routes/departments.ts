@@ -21,6 +21,16 @@ const departmentSchema = z.object({
     .max(100, "Name is too long"),
 });
 
+const attachUserToDepartmentSchema = z.object({
+  userId: z.string().min(1, {
+    message: "User Must be selected",
+  }),
+  departmentId: z.string().min(1, {
+    message: "Department Must be selected",
+  }),
+  role: z.nativeEnum(departmentUserRole).default(departmentUserRole.LECTURER),
+});
+
 const departments = new Hono<{ Variables: JwtVariables }>();
 // departments.use("*", authMiddleware);
 
@@ -67,7 +77,17 @@ departments
     const data = await db.query.departmentsTable.findFirst({
       where: (department, { eq }) => eq(department.slug, slug),
       with: {
-        members: true,
+        members: {
+          with: {
+            user: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -126,7 +146,6 @@ departments
         .update(departmentsTable)
         .set({
           name: capitalizeFirstLetter(name),
-          slug: slugify(name),
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -136,6 +155,29 @@ departments
       return ctx.json({ data }, 200);
     } catch (error) {
       console.error("Error updating department:", error);
+      return ctx.json({ error: "Internal Server Error" }, 500);
+    }
+  })
+  .patch("/members", async (ctx) => {
+    try {
+      const body = await ctx.req.json(); // Get request body
+      const validatedData = attachUserToDepartmentSchema.safeParse(body); // Validate input
+
+      if (!validatedData.success) {
+        return ctx.json({ error: validatedData.error.format() }, 400);
+      }
+
+      const { userId, departmentId, role } = validatedData.data;
+
+      const data = await db.insert(userToDepartment).values({
+        userId,
+        departmentId,
+        role,
+      });
+
+      return ctx.json({ data }, 200);
+    } catch (error) {
+      console.error("Error attaching user to department:", error);
       return ctx.json({ error: "Internal Server Error" }, 500);
     }
   });

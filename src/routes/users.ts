@@ -4,11 +4,23 @@ import { authMiddleware } from "../middleware/auth";
 import db from "@/db";
 
 const users = new Hono<{ Variables: JwtVariables }>();
-users.use("*", authMiddleware);
+// users.use("*", authMiddleware);
 
 users
   .get("/", async (ctx) => {
-    const data = await db.query.usersTable.findMany();
+    // Get the 'search' query parameter from the request
+    const searchQuery = ctx.req.query("search");
+
+    let data;
+    if (searchQuery) {
+      // If a search query exists, filter users based on the search term
+      data = await db.query.usersTable.findMany({
+        where: (user, { ilike }) => ilike(user.name, `%${searchQuery}%`), // Adjust 'name' if you're searching by another field
+      });
+    } else {
+      // If no search query exists, fetch all users
+      data = await db.query.usersTable.findMany();
+    }
 
     return ctx.json({ data });
   })

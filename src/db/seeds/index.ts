@@ -129,7 +129,7 @@ async function seed(options: SeedOptions = {}) {
 // Example usage
 async function main() {
   await seed({
-    users: 20000,
+    users: 100,
     departments: 20,
     userToDepartments: 50,
     courses: 30000,
