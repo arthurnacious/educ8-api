@@ -195,21 +195,6 @@ export const attendanceTable = pgTable("attendance", {
   type: attendanceStatusEnum("type").default(AttendanceName.PRESENT).notNull(),
 });
 
-export const coursesToDepartments = pgTable("courseToDepartments", {
-  courseId: uuid("courseId")
-    .notNull()
-    .references(() => coursesTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-  departmentId: uuid("departmentId")
-    .notNull()
-    .references(() => departmentsTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-});
-
 export const studentsToLessonRosters = pgTable("studentToLessonRoster", {
   studentId: uuid("studentId")
     .notNull()
@@ -301,7 +286,7 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
 // Department Relations
 export const departmentsRelations = relations(departmentsTable, ({ many }) => ({
   // Courses in this department
-  courses: many(coursesToDepartments),
+  courses: many(coursesTable),
 
   // Users affiliated with this department
   members: many(userToDepartment),
@@ -320,9 +305,6 @@ export const coursesRelations = relations(coursesTable, ({ one, many }) => ({
 
   // Lesson rosters for this course
   lessonRosters: many(lessonRostersTable),
-
-  // Department connections (for cross-listed courses)
-  departmentConnections: many(coursesToDepartments),
 }));
 
 // Field Relations
@@ -404,24 +386,6 @@ export const attendanceRelations = relations(attendanceTable, ({ one }) => ({
     references: [sessionsTable.id],
   }),
 }));
-
-// CoursesToDepartments Relations
-export const coursesToDepartmentsRelations = relations(
-  coursesToDepartments,
-  ({ one }) => ({
-    // Course in this relationship
-    course: one(coursesTable, {
-      fields: [coursesToDepartments.courseId],
-      references: [coursesTable.id],
-    }),
-
-    // Department in this relationship
-    department: one(departmentsTable, {
-      fields: [coursesToDepartments.departmentId],
-      references: [departmentsTable.id],
-    }),
-  })
-);
 
 // StudentsToLessonRosters Relations
 export const studentsToLessonRostersRelations = relations(

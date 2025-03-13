@@ -1,15 +1,8 @@
 import { Hono } from "hono";
 import { JwtVariables } from "hono/jwt";
-import { authMiddleware } from "../middleware/auth";
 import db from "@/db";
 import { and, eq, sql } from "drizzle-orm";
-import {
-  coursesTable,
-  coursesToDepartments,
-  departmentsTable,
-  userToDepartment,
-  userToDepartmentRelations,
-} from "@/db/schema";
+import { coursesTable, departmentsTable, userToDepartment } from "@/db/schema";
 import { departmentUserRole } from "@/types/roles";
 import { slugify } from "@/utils";
 import { z } from "zod";
@@ -156,6 +149,14 @@ departments
                 email: true,
               },
             },
+          },
+        },
+        courses: {
+          columns: {
+            id: true,
+            name: true,
+            slug: true,
+            createdAt: true,
           },
         },
       },

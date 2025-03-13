@@ -96,7 +96,7 @@ export async function coursesTableSeeder(
         departments[Math.floor(Math.random() * departments.length)];
 
       return {
-        departmentId: customFields.departmentId?.(actualIndex) || department.id,
+        departmentId: department.id,
         name,
         slug,
         description:

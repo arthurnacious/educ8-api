@@ -23,7 +23,6 @@ interface SeedOptions {
   lessonrosters?: number;
   sessions?: number;
   attendance?: number;
-  coursesToDepartments?: number;
   studentToLesonRosters?: number;
   marks?: number;
   batch?: number;
@@ -41,7 +40,6 @@ async function seed(options: SeedOptions = {}) {
     lessonrosters = 0,
     sessions = 0,
     attendance = 0,
-    coursesToDepartments = 0,
     studentToLesonRosters = 0,
     marks = 0,
     batch = 100,
@@ -104,13 +102,6 @@ async function seed(options: SeedOptions = {}) {
     await attendanceTableSeeder(attendance, { batch });
   }
 
-  if (coursesToDepartments > 0) {
-    console.log(
-      `\n--- Seeding ${coursesToDepartments} coursesToDepartments ---`
-    );
-    await coursesToDepartmentsSeeder(coursesToDepartments, { batch });
-  }
-
   if (studentToLesonRosters > 0) {
     console.log(
       `\n--- Seeding ${studentToLesonRosters} studentToLesonRosters ---`
@@ -137,7 +128,6 @@ async function main() {
     lessonrosters: 10,
     sessions: 10,
     attendance: 100,
-    coursesToDepartments: 200,
     studentToLesonRosters: 300,
     marks: 100,
     batch: 300,
