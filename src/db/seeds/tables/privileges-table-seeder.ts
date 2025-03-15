@@ -1,5 +1,11 @@
 import db from "@/db";
-import { privilegesTable, rolesTable, usersTable } from "@/db/schema";
+import {
+  rolePermissionsTable,
+  userPermissionsTable,
+  rolesTable,
+  usersTable,
+} from "@/db/schema";
+import { faker } from "@faker-js/faker";
 
 interface PrivilegeSeederOptions {
   batch?: number;
@@ -11,7 +17,7 @@ export async function privilegesTableSeeder(
   options: PrivilegeSeederOptions = {}
 ) {
   const { batch = 100, customFields = {} } = options;
-  await db.delete(privilegesTable);
+  await db.delete(rolePermissionsTable);
   console.log(`Seeding ${count} privileges in batches of ${batch}...`);
 
   // Get all roles and users
@@ -44,32 +50,32 @@ export async function privilegesTableSeeder(
     "grade_students",
   ];
 
+  // for roles (permissions)
+  const insertData = roles.map(({ id: roleId }) => ({
+    permissionName: faker.helpers.arrayElement(privilegeNames),
+    roleId,
+  }));
+
+  db.insert(rolePermissionsTable).values(insertData);
+
+  //for users
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);
     const privilegeData = Array.from({ length: batchSize }, (_, index) => {
       const actualIndex = i + index;
-      const assignToRole = Math.random() > 0.5;
 
       // Either assign to a role or a specific user
       return {
-        name:
-          customFields.name?.(actualIndex) ||
+        permissionName:
           privilegeNames[Math.floor(Math.random() * privilegeNames.length)],
-        roleId: assignToRole
-          ? customFields.roleId?.(actualIndex) ||
-            roles[Math.floor(Math.random() * roles.length)].id
-          : null,
-        userId: !assignToRole
-          ? customFields.userId?.(actualIndex) ||
-            users[Math.floor(Math.random() * users.length)].id
-          : null,
+        userId: users[Math.floor(Math.random() * users.length)].id,
       };
     });
 
     console.log(
       `Inserting batch ${i / batch + 1} (${privilegeData.length} privileges)...`
     );
-    await db.insert(privilegesTable).values(privilegeData);
+    await db.insert(userPermissionsTable).values(privilegeData);
   }
 
   console.log(`Successfully seeded ${count} privileges.`);

@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   timestamp,
   pgTable,
@@ -52,27 +52,14 @@ export const usersTable = pgTable("users", {
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
-  passwordHash: varchar("password_hash", { length: 255 }),
-  roleId: uuid("role_id").references(() => rolesTable.id, {
-    onDelete: "cascade",
-    onUpdate: "cascade",
-  }),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  roleId: uuid("role_id")
+    .references(() => rolesTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
   image: varchar("image", { length: 255 }),
-});
-
-export const privilegesTable = pgTable("privileges", {
-  id: uuid("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(), // e.g., 'can_edit_users'
-  roleId: uuid("role_id").references(() => rolesTable.id, {
-    onDelete: "cascade",
-    onUpdate: "cascade",
-  }),
-  userId: uuid("user_id").references(() => usersTable.id, {
-    onDelete: "cascade",
-    onUpdate: "cascade",
-  }),
 });
 
 export const departmentsTable = pgTable("departments", {
@@ -239,6 +226,32 @@ export const parentDepandants = pgTable("userToDepartment", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
+});
+
+export const rolePermissionsTable = pgTable("role_permissions", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  roleId: uuid("role_id")
+    .references(() => rolesTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  permissionName: text("permission_name").notNull(), // e.g., 'can_create_classes'
+});
+
+export const userPermissionsTable = pgTable("user_permissions", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: uuid("user_id")
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  permissionName: text("permission_name").notNull(), // Custom permission for this user
 });
 
 //? Relationships

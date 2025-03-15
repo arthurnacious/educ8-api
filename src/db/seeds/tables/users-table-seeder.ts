@@ -2,7 +2,7 @@ import { rolesTable, usersTable } from "@/db/schema";
 import { rolesTableSeeder } from "./roles-table-seeder";
 import db from "@/db";
 import { faker } from "@faker-js/faker";
-
+import { hash } from "@/auth";
 interface UserSeederOptions {
   batch?: number;
   customFields?: Record<string, (index: number) => any>;
@@ -26,7 +26,7 @@ export async function usersTableSeeder(
     const batchSize = Math.min(batch, count - i);
 
     // Generate password hash once for all users in this batch to improve performance
-    const defaultPassword = await Bun.password.hash("password123");
+    const defaultPassword = hash("password123");
 
     const userData = Array.from({ length: batchSize }, (_, index) => {
       const actualIndex = i + index;
@@ -37,21 +37,14 @@ export async function usersTableSeeder(
         Math.random() * 100000
       )}`;
       return {
-        name: customFields.name?.(actualIndex) || faker.person.fullName(),
-        email:
-          customFields.email?.(actualIndex) ||
-          `${faker.internet
-            .displayName()
-            .toLowerCase()}-${uniqueSuffix}@example.com`,
-        emailVerified:
-          customFields.emailVerified?.(actualIndex) ||
-          (Math.random() > 0.3 ? faker.date.past() : null),
-        passwordHash:
-          customFields.passwordHash?.(actualIndex) || defaultPassword,
-        roleId: customFields.roleId?.(actualIndex) || role?.id || null,
-        image:
-          customFields.image?.(actualIndex) ||
-          (Math.random() > 0.5 ? faker.image.avatar() : null),
+        name: faker.person.fullName(),
+        email: `${faker.internet
+          .displayName()
+          .toLowerCase()}-${uniqueSuffix}@example.com`,
+        emailVerified: Math.random() > 0.3 ? faker.date.past() : null,
+        passwordHash: defaultPassword,
+        roleId: role?.id,
+        image: Math.random() > 0.5 ? faker.image.avatar() : null,
       };
     });
 

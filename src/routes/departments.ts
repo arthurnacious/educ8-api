@@ -37,38 +37,49 @@ const departments = new Hono<{ Variables: JwtVariables }>();
 
 departments
   .get("/", async (ctx) => {
-    const data = await db
-      .select({
-        id: departmentsTable.id,
-        name: departmentsTable.name,
-        slug: departmentsTable.slug,
-        createdAt: departmentsTable.createdAt,
-        updatedAt: departmentsTable.updatedAt,
-        leadersCount: sql<number>`
+    // Get the 'search' query parameter from the request
+    const searchQuery = ctx.req.query("search");
+
+    let data;
+    if (searchQuery) {
+      // If a search query exists, filter users based on the search term
+      data = await db.query.departmentsTable.findMany({
+        where: (user, { ilike }) => ilike(user.name, `%${searchQuery}%`), // Adjust 'name' if you're searching by another field
+      });
+    } else {
+      data = await db
+        .select({
+          id: departmentsTable.id,
+          name: departmentsTable.name,
+          slug: departmentsTable.slug,
+          createdAt: departmentsTable.createdAt,
+          updatedAt: departmentsTable.updatedAt,
+          leadersCount: sql<number>`
         (SELECT COUNT(*) 
          FROM ${userToDepartment} 
          WHERE ${userToDepartment.role} = ${departmentUserRole.LEADER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
         )`.as("leaders_count"),
-        lecturersCount: sql<number>`
+          lecturersCount: sql<number>`
         (SELECT COUNT(*) 
          FROM ${userToDepartment} 
          WHERE ${userToDepartment.role} = ${departmentUserRole.LECTURER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
         )`.as("lecturers_count"),
-        coursesCount: sql`count(distinct ${coursesTable.id})`.as(
-          "courses_count"
-        ),
-      })
-      .from(departmentsTable)
-      .leftJoin(
-        coursesTable,
-        eq(departmentsTable.id, coursesTable.departmentId)
-      )
-      .leftJoin(
-        userToDepartment,
-        eq(departmentsTable.id, userToDepartment.departmentId)
-      )
-      .groupBy(departmentsTable.id)
-      .execute();
+          coursesCount: sql`count(distinct ${coursesTable.id})`.as(
+            "courses_count"
+          ),
+        })
+        .from(departmentsTable)
+        .leftJoin(
+          coursesTable,
+          eq(departmentsTable.id, coursesTable.departmentId)
+        )
+        .leftJoin(
+          userToDepartment,
+          eq(departmentsTable.id, userToDepartment.departmentId)
+        )
+        .groupBy(departmentsTable.id)
+        .execute();
+    }
 
     return ctx.json({ data });
   })

@@ -1,6 +1,5 @@
 import { attendanceTableSeeder } from "./tables/attendance-table-seeder";
 import { coursesTableSeeder } from "./tables/course-seeder-options";
-import { coursesToDepartmentsSeeder } from "./tables/courses-to-departments-seeder";
 import { departmentsTableSeeder } from "./tables/departments-table-seeder";
 import { fieldsTableSeeder } from "./tables/fields-table-seeder";
 import { lessonRostersTableSeeder } from "./tables/lesson-rosters-table-seeder";
@@ -120,7 +119,8 @@ async function seed(options: SeedOptions = {}) {
 // Example usage
 async function main() {
   await seed({
-    users: 100,
+    users: 1000,
+    privileges: 100,
     departments: 20,
     userToDepartments: 50,
     courses: 30000,

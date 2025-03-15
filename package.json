@@ -8,6 +8,7 @@
     "seed": "bun run src/db/seeds/index.ts"
   },
   "dependencies": {
+    "crypto-js": "^4.2.0",
     "drizzle-orm": "^0.40.0",
     "hono": "^4.7.1",
     "pg": "^8.13.3",
