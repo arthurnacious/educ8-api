@@ -30,7 +30,7 @@ auth
     const user = await db.query.usersTable.findFirst({
       where: eq(usersTable.email, validatedData.data.email),
       with: {
-        roles: {
+        role: {
           columns: {
             name: true,
           },
@@ -39,7 +39,7 @@ auth
     });
 
     if (!user) {
-      return c.json({ error: "Invalid Credentials" }, 401);
+      return c.json({ error: "Invalid Credentialss" }, 401);
     }
 
     const isMatch = verifyPassword(

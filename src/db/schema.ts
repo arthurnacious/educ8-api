@@ -261,7 +261,7 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   departmentMemberships: many(userToDepartment),
 
   // User's roles
-  roles: one(rolesTable, {
+  role: one(rolesTable, {
     fields: [usersTable.roleId],
     references: [rolesTable.id],
   }),
