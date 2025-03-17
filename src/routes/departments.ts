@@ -6,6 +6,7 @@ import { coursesTable, departmentsTable, userToDepartment } from "@/db/schema";
 import { departmentUserRole } from "@/types/roles";
 import { slugify } from "@/utils";
 import { z } from "zod";
+import { authMiddleware } from "@/middleware/auth";
 
 const createDepartmentSchema = z.object({
   name: z
@@ -33,7 +34,7 @@ const unassignUsersToDeprtmentSchema = z.object({
 });
 
 const departments = new Hono<{ Variables: JwtVariables }>();
-// departments.use("*", authMiddleware);
+departments.use("*", authMiddleware);
 
 departments
   .get("/", async (ctx) => {

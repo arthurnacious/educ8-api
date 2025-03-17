@@ -11,7 +11,10 @@ const app = new Hono();
 app.use("*", cors());
 
 app
-  .route("/", auth)
+  .get("/", (c) => {
+    return c.json({ message: "Hi School Manager!" });
+  })
+  .route("/auth", auth)
   .route("/me", me)
   .route("/courses", courses)
   .route("/departments", departments)
