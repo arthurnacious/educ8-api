@@ -72,6 +72,7 @@ export const departmentsTable = pgTable("departments", {
   updatedAt: timestamp("updatedAt")
     .defaultNow()
     .$onUpdate(() => new Date()),
+    deletedAt: timestamp('deleted_at')
 });
 
 export const coursesTable = pgTable("course", {
@@ -91,6 +92,7 @@ export const coursesTable = pgTable("course", {
   updatedAt: timestamp("updatedAt")
     .defaultNow()
     .$onUpdate(() => new Date()),
+  deletedAt: timestamp('deleted_at')
 });
 
 export const fields = pgTable("field", {
