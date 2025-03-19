@@ -1,13 +1,15 @@
 import { hash, verify as verifyPassword } from "@/auth";
 import db from "@/db";
 import { usersTable } from "@/db/schema";
-import { authMiddleware } from "@/middleware/auth";
+import { setCookie, getCookie } from "hono/cookie";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { sign } from "hono/jwt";
 import { z } from "zod";
 
 const auth = new Hono();
+
+const refreshTokens = new Map();
 
 const loginSchema = z.object({
   email: z.string().min(1).max(100),
@@ -50,8 +52,8 @@ auth
 
     const token = await sign(
       {
-        id: user.id, email: user.email, role: "user", 
-        exp: Math.floor(Date.now() / 1000) + 60 * 60 // 1 hour from now,
+        id: user.id,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour from now,
       },
       process.env.JWT_SECRET!
     );
@@ -60,33 +62,46 @@ auth
 
     return c.json({ user: userPayload, accessToken: token });
   })
-  .get("/refresh", authMiddleware, async (c) => {
-    const { user: decoded } = c.get("jwtPayload");
+  .post("/refresh", async (c) => {
+    const refreshTokenId = getCookie(c, "refreshToken");
 
-    const user = await db.query.usersTable.findFirst({
-      where: eq(usersTable.id, decoded.id),
-      with: {
-        role: {
-          columns: {
-            name: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      return c.json({ error: "User not found" }, 401);
+    if (!refreshTokenId) {
+      return c.json({ error: "Refresh token required" }, 401);
     }
 
-    const { passwordHash, role, ...userPayload } = user;
+    // Verify refresh token exists in our store
+    const userData = refreshTokens.get(refreshTokenId);
+    if (!userData) {
+      return c.json({ error: "Invalid refresh token" }, 403);
+    }
 
-    const expiresIn = 60 * 24 * 7 * 4; // Adjust expiration
-    const newToken = await sign(
-      { ...userPayload, role: user.role.name },
-      process.env.JWT_SECRET!
-    );
+    // Generate new access token
+    const payload = {
+      id: userData.id,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour from now,
+    };
+    const accessToken = await sign(payload, process.env.JWT_SECRET!);
 
-    return c.json({ token: newToken });
+    const newRefreshTokenId = generateRandomString(64);
+    // Store new refresh token
+    refreshTokens.set(newRefreshTokenId, {
+      ...userData,
+      createdAt: Date.now(),
+    });
+
+    // Delete old refresh token
+    refreshTokens.delete(refreshTokenId);
+
+    // Set new refresh token cookie
+    setCookie(c, "refreshToken", newRefreshTokenId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    });
+
+    return c.json({ accessToken });
   })
   .post("/logout", (c) => {
     //do stuff
@@ -95,3 +110,15 @@ auth
   });
 
 export default auth;
+
+function generateRandomString(length = 64) {
+  // Use crypto.getRandomValues for cryptographically strong random values
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+
+  // Convert to a string using base64 encoding and remove non-alphanumeric characters
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, length); // Ensure exact length
+}
