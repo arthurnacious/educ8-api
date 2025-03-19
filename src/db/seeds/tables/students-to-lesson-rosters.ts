@@ -20,30 +20,68 @@ export async function studentsToLessonRostersSeeder(
   console.log(
     `Seeding ${count} student-lesson roster associations in batches of ${batch}...`
   );
+
   const lessonRosters = await db.select().from(lessonRostersTable);
   const users = await db.select().from(usersTable);
+
+  if (lessonRosters.length === 0) {
+    console.error("No lesson rosters found. Please seed lesson rosters first.");
+    return;
+  }
+
+  if (users.length === 0) {
+    console.error("No users found. Please seed users first.");
+    return;
+  }
 
   const lessonRosterIds = lessonRosters.map((lessonRoster) => lessonRoster.id);
   const userIds = users.map((user) => user.id);
 
-  for (let i = 0; i < count; i += batch) {
-    const batchSize = Math.min(batch, count - i);
-    const associationData = Array.from({ length: batchSize }, (_, index) => {
-      return {
-        studentId: faker.helpers.arrayElement(userIds),
-        lessonRosterId: faker.helpers.arrayElement(lessonRosterIds),
-      };
+  // Set to track unique combinations
+  const usedCombinations = new Set();
+  const generatedAssociations = [];
+
+  // Generate unique combinations
+  while (generatedAssociations.length < count) {
+    const studentId = faker.helpers.arrayElement(userIds);
+    const lessonRosterId = faker.helpers.arrayElement(lessonRosterIds);
+    const combinationKey = `${studentId}-${lessonRosterId}`;
+
+    // Skip if this combination already exists
+    if (usedCombinations.has(combinationKey)) {
+      continue;
+    }
+
+    // Add to tracking set
+    usedCombinations.add(combinationKey);
+
+    // Create the association
+    generatedAssociations.push({
+      studentId,
+      lessonRosterId,
     });
 
+    // If we've reached the maximum possible combinations, break
+    if (usedCombinations.size === userIds.length * lessonRosterIds.length) {
+      console.log(
+        `Maximum possible combinations reached: ${usedCombinations.size}`
+      );
+      break;
+    }
+  }
+
+  // Insert in batches
+  for (let i = 0; i < generatedAssociations.length; i += batch) {
+    const associationBatch = generatedAssociations.slice(i, i + batch);
     console.log(
-      `Inserting batch ${i / batch + 1} (${
-        associationData.length
+      `Inserting batch ${Math.floor(i / batch) + 1} (${
+        associationBatch.length
       } associations)...`
     );
-    await db.insert(studentsToLessonRosters).values(associationData);
+    await db.insert(studentsToLessonRosters).values(associationBatch);
   }
 
   console.log(
-    `Successfully seeded ${count} student-lesson roster associations.`
+    `Successfully seeded ${generatedAssociations.length} student-lesson roster associations.`
   );
 }

@@ -1,6 +1,10 @@
 import db from "@/db";
-import { departmentsTable, usersTable, userToDepartment } from "@/db/schema";
-import { departmentUserRole } from "@/types/roles";
+import {
+  departmentRolesTable,
+  departmentsTable,
+  usersTable,
+  userToDepartmentsTable,
+} from "@/db/schema";
 import { faker } from "@faker-js/faker";
 
 interface SeederOptions {
@@ -13,42 +17,75 @@ export async function userToDepartmentSeeder(
   options: SeederOptions = {}
 ) {
   const { batch = 100, customFields = {} } = options;
-  await db.delete(userToDepartment);
+  await db.delete(userToDepartmentsTable);
   console.log(
     `Seeding ${count} user-department associations in batches of ${batch}...`
   );
 
   const departments = await db.select().from(departmentsTable);
   const users = await db.select().from(usersTable);
+  const roles = await db.select().from(departmentRolesTable);
+
   if (departments.length === 0) {
-    console.error("No departments found Please seed departments first.");
+    console.error("No departments found. Please seed departments first.");
     return;
   }
+
   if (users.length === 0) {
     console.error("No users found. Please seed users first.");
     return;
   }
-  const departmentIds = departments.map((department) => department.id);
 
-  const userIds = users.map((user) => user.id);
+  const departmentIds = departments.map(({ id }) => id);
+  const userIds = users.map(({ id }) => id);
+  const roleIds = roles.map(({ id }) => id);
 
-  for (let i = 0; i < count; i += batch) {
-    const batchSize = Math.min(batch, count - i);
-    const associationData = Array.from({ length: batchSize }, (_, index) => {
-      return {
-        departmentId: faker.helpers.arrayElement(departmentIds),
-        userId: faker.helpers.arrayElement(userIds),
-        role: faker.helpers.arrayElement(Object.values(departmentUserRole)),
-      };
+  // Set to track unique combinations
+  const usedCombinations = new Set();
+  const generatedAssociations = [];
+
+  // Generate unique combinations
+  while (generatedAssociations.length < count) {
+    const departmentId = faker.helpers.arrayElement(departmentIds);
+    const userId = faker.helpers.arrayElement(userIds);
+    const combinationKey = `${departmentId}-${userId}`;
+
+    // Skip if this combination already exists
+    if (usedCombinations.has(combinationKey)) {
+      continue;
+    }
+
+    // Add to tracking set
+    usedCombinations.add(combinationKey);
+
+    // Create the association
+    generatedAssociations.push({
+      departmentId,
+      userId,
+      departmentRoleId: faker.helpers.arrayElement(roleIds),
     });
 
-    console.log(
-      `Inserting batch ${i / batch + 1} (${
-        associationData.length
-      } associations)...`
-    );
-    await db.insert(userToDepartment).values(associationData);
+    // If we've reached the maximum possible combinations, break
+    if (usedCombinations.size === departmentIds.length * userIds.length) {
+      console.log(
+        `Maximum possible combinations reached: ${usedCombinations.size}`
+      );
+      break;
+    }
   }
 
-  console.log(`Successfully seeded ${count} user-department associations.`);
+  // Insert in batches
+  for (let i = 0; i < generatedAssociations.length; i += batch) {
+    const associationBatch = generatedAssociations.slice(i, i + batch);
+    console.log(
+      `Inserting batch ${Math.floor(i / batch) + 1} (${
+        associationBatch.length
+      } associations)...`
+    );
+    await db.insert(userToDepartmentsTable).values(associationBatch);
+  }
+
+  console.log(
+    `Successfully seeded ${generatedAssociations.length} user-department associations.`
+  );
 }

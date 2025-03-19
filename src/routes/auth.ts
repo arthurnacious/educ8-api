@@ -33,6 +33,18 @@ auth
           columns: {
             name: true,
           },
+          with: {
+            permissions: {
+              columns: {
+                name: true,
+              },
+            },
+          },
+        },
+        permissions: {
+          columns: {
+            name: true,
+          },
         },
       },
     });
@@ -50,6 +62,11 @@ auth
       return c.json({ error: "Invalid Credentials" }, 401);
     }
 
+    const permissions = [
+      ...(user?.role?.permissions?.map((p) => p.name) || []),
+      ...(user?.permissions?.map((p) => p.name) || []),
+    ];
+
     const token = await sign(
       {
         id: user.id,
@@ -58,7 +75,19 @@ auth
       process.env.JWT_SECRET!
     );
 
-    const { passwordHash, roleId, ...userPayload } = user;
+    // Exclude sensitive/unnecessary fields
+    const {
+      passwordHash,
+      roleId,
+      permissions: userPerms,
+      role,
+      ...rest
+    } = user;
+    const userPayload = {
+      ...rest,
+      role: role ? { name: role.name } : null, // Keep role name only
+      permissions,
+    };
 
     return c.json({ user: userPayload, accessToken: token });
   })

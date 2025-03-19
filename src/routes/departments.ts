@@ -2,8 +2,12 @@ import { Hono } from "hono";
 import { JwtVariables } from "hono/jwt";
 import db from "@/db";
 import { and, eq, sql } from "drizzle-orm";
-import { coursesTable, departmentsTable, userToDepartment } from "@/db/schema";
-import { departmentUserRole } from "@/types/roles";
+import {
+  coursesTable,
+  departmentsTable,
+  userToDepartmentsTable,
+} from "@/db/schema";
+import { departmentRole } from "@/types/roles";
 import { slugify } from "@/utils";
 import { z } from "zod";
 import { authMiddleware } from "@/middleware/auth";
@@ -26,7 +30,7 @@ const assignUserToDepartmentSchema = z.object({
   departmentId: z.string().min(1, {
     message: "Department Must be selected",
   }),
-  role: z.nativeEnum(departmentUserRole).default(departmentUserRole.LECTURER),
+  role: z.nativeEnum(departmentRole).default(departmentRole.LECTURER),
 });
 
 const unassignUsersToDeprtmentSchema = z.object({
@@ -58,12 +62,12 @@ departments
           leadersCount: sql<number>`
         (SELECT COUNT(*) 
          FROM ${userToDepartment} 
-         WHERE ${userToDepartment.role} = ${departmentUserRole.LEADER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
+         WHERE ${userToDepartment.role} = ${departmentRole.LEADER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
         )`.as("leaders_count"),
           lecturersCount: sql<number>`
         (SELECT COUNT(*) 
          FROM ${userToDepartment} 
-         WHERE ${userToDepartment.role} = ${departmentUserRole.LECTURER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
+         WHERE ${userToDepartment.role} = ${departmentRole.LECTURER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
         )`.as("lecturers_count"),
           coursesCount: sql`count(distinct ${coursesTable.id})`.as(
             "courses_count"
@@ -243,11 +247,11 @@ departments
       const data = await Promise.all(
         idObject.map(({ userId, departmentId }) =>
           db
-            .delete(userToDepartment)
+            .delete(userToDepartmentsTable)
             .where(
               and(
-                eq(userToDepartment.userId, userId),
-                eq(userToDepartment.departmentId, departmentId)
+                eq(userToDepartmentsTable.userId, userId),
+                eq(userToDepartmentsTable.departmentId, departmentId)
               )
             )
         )

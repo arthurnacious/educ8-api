@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
   timestamp,
   pgTable,
@@ -7,9 +7,10 @@ import {
   varchar,
   numeric,
   uuid,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { AttendanceName } from "@/types/attendance";
-import { departmentUserRole, userRole } from "@/types/roles";
+import { departmentRole, userRole } from "@/types/roles";
 
 export const userRoleEnum = pgEnum(
   "user_role",
@@ -27,12 +28,9 @@ export const attendanceStatusEnum = pgEnum(
   Object.values(AttendanceName) as [AttendanceName, ...AttendanceName[]]
 );
 
-export const departmentUserRoleEnum = pgEnum(
+export const departmentRoleEnum = pgEnum(
   "role",
-  Object.values(departmentUserRole) as [
-    departmentUserRole,
-    ...departmentUserRole[]
-  ]
+  Object.values(departmentRole) as [departmentRole, ...departmentRole[]]
 );
 
 export const rolesTable = pgTable("roles", {
@@ -72,7 +70,7 @@ export const departmentsTable = pgTable("departments", {
   updatedAt: timestamp("updatedAt")
     .defaultNow()
     .$onUpdate(() => new Date()),
-    deletedAt: timestamp('deleted_at')
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const coursesTable = pgTable("course", {
@@ -92,7 +90,7 @@ export const coursesTable = pgTable("course", {
   updatedAt: timestamp("updatedAt")
     .defaultNow()
     .$onUpdate(() => new Date()),
-  deletedAt: timestamp('deleted_at')
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const fields = pgTable("field", {
@@ -165,6 +163,32 @@ export const sessionsTable = pgTable("sessions", {
   name: varchar("name", { length: 255 }).notNull(),
 });
 
+export const departmentRolesTable = pgTable("department_roles", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: departmentRoleEnum("role").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const departmentRolePermissionsTable = pgTable(
+  "department_role_permissions",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    departmentRoleId: uuid("department_role_id")
+      .references(() => departmentRolesTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      })
+      .notNull(),
+    name: text("name").notNull(),
+  }
+);
+
 export const attendanceTable = pgTable("attendance", {
   id: uuid("id")
     .primaryKey()
@@ -181,54 +205,79 @@ export const attendanceTable = pgTable("attendance", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  type: attendanceStatusEnum("type").default(AttendanceName.PRESENT).notNull(),
+  status: attendanceStatusEnum("status")
+    .default(AttendanceName.PRESENT)
+    .notNull(),
 });
 
-export const studentsToLessonRosters = pgTable("studentToLessonRoster", {
-  studentId: uuid("studentId")
-    .notNull()
-    .references(() => usersTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-  lessonRosterId: uuid("lessonRosterId")
-    .notNull()
-    .references(() => lessonRostersTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-});
+export const studentsToLessonRosters = pgTable(
+  "studentToLessonRoster",
+  {
+    studentId: uuid("studentId")
+      .notNull()
+      .references(() => usersTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    lessonRosterId: uuid("lessonRosterId")
+      .notNull()
+      .references(() => lessonRostersTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+  },
+  ({ studentId, lessonRosterId }) => {
+    return [primaryKey({ columns: [studentId, lessonRosterId] })];
+  }
+);
 
-export const userToDepartment = pgTable("userToDepartment", {
-  departmentId: uuid("departmentId")
-    .notNull()
-    .references(() => departmentsTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-  userId: uuid("userId")
-    .notNull()
-    .references(() => usersTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-  role: departmentUserRoleEnum("role").notNull(),
-});
+export const userToDepartmentsTable = pgTable(
+  "userToDepartment",
+  {
+    departmentId: uuid("departmentId")
+      .notNull()
+      .references(() => departmentsTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => usersTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    departmentRoleId: uuid("department_role_id")
+      .notNull()
+      .references(() => departmentRolesTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+  },
+  ({ departmentId, userId }) => {
+    return [primaryKey({ columns: [departmentId, userId] })];
+  }
+);
 
-export const parentDepandants = pgTable("userToDepartment", {
-  guardianId: uuid("guardianId") // Clearly denotes a guardian
-    .notNull()
-    .references(() => usersTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-  dependentId: uuid("dependentId") // Clearly denotes a dependent
-    .notNull()
-    .references(() => usersTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
-});
+export const guardianDependantsTable = pgTable(
+  "guardianToDependents",
+  {
+    guardianId: uuid("guardianId") // Clearly denotes a guardian
+      .notNull()
+      .references(() => usersTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    dependentId: uuid("dependentId")
+      .notNull()
+      .references(() => usersTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+  },
+  ({ guardianId, dependentId }) => {
+    return [primaryKey({ columns: [guardianId, dependentId] })];
+  }
+);
 
 export const rolePermissionsTable = pgTable("role_permissions", {
   id: uuid("id")
@@ -240,7 +289,7 @@ export const rolePermissionsTable = pgTable("role_permissions", {
       onUpdate: "cascade",
     })
     .notNull(),
-  permissionName: text("permission_name").notNull(), // e.g., 'can_create_classes'
+  name: text("name").notNull(),
 });
 
 export const userPermissionsTable = pgTable("user_permissions", {
@@ -253,16 +302,16 @@ export const userPermissionsTable = pgTable("user_permissions", {
       onUpdate: "cascade",
     })
     .notNull(),
-  permissionName: text("permission_name").notNull(), // Custom permission for this user
+  name: text("name").notNull(), // Custom permission for this user
 });
 
 //? Relationships
 // Users Relations
 export const usersRelations = relations(usersTable, ({ many, one }) => ({
-  // User's department affiliations
-  departmentMemberships: many(userToDepartment),
+  // User's department affiliations (many-to-many via userToDepartmentsTable)
+  departmentMemberships: many(userToDepartmentsTable),
 
-  // User's roles
+  // User's role (each user belongs to one role)
   role: one(rolesTable, {
     fields: [usersTable.roleId],
     references: [rolesTable.id],
@@ -279,50 +328,50 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     relationName: "lessonCreator",
   }),
 
-  // Attendance records
+  // Attendance records (as a student)
   attendanceRecords: many(attendanceTable, {
     relationName: "studentAttendance",
   }),
 
-  // Guardian relationships - where this user is the guardian
-  dependents: many(parentDepandants, {
+  // Guardian relationships – where this user is the guardian
+  dependents: many(guardianDependantsTable, {
     relationName: "guardianToDependents",
-
-    // foreignKey: "guardianId",
   }),
 
-  // Dependent relationships - where this user is the dependent
-  guardians: many(parentDepandants, {
+  // Dependent relationships – where this user is the dependent
+  guardians: many(guardianDependantsTable, {
     relationName: "dependentToGuardians",
-    // foreignKey: "dependentId",
   }),
+
+  // Custom permissions directly assigned to the user
+  permissions: many(userPermissionsTable),
 }));
 
-// Department Relations
+// Departments Relationships
 export const departmentsRelations = relations(departmentsTable, ({ many }) => ({
   // Courses in this department
   courses: many(coursesTable),
 
-  // Users affiliated with this department
-  members: many(userToDepartment),
+  // Users affiliated with this department (via join table)
+  members: many(userToDepartmentsTable),
 }));
 
-// Course Relations
+// Courses Relationships
 export const coursesRelations = relations(coursesTable, ({ one, many }) => ({
-  // Department this course belongs to
+  // Department the course belongs to
   department: one(departmentsTable, {
     fields: [coursesTable.departmentId],
     references: [departmentsTable.id],
   }),
 
-  // Fields/subjects within this course
+  // Fields (subjects) in the course
   fields: many(fields),
 
-  // Lesson rosters for this course
+  // Lesson rosters for the course
   lessonRosters: many(lessonRostersTable),
 }));
 
-// Field Relations
+// Fields Relationships
 export const fieldsRelations = relations(fields, ({ one, many }) => ({
   // Course this field belongs to
   course: one(coursesTable, {
@@ -334,7 +383,7 @@ export const fieldsRelations = relations(fields, ({ one, many }) => ({
   marks: many(marks),
 }));
 
-// Lesson Roster Relations
+// Lesson Rosters Relationships
 export const lessonRostersRelations = relations(
   lessonRostersTable,
   ({ one, many }) => ({
@@ -344,7 +393,7 @@ export const lessonRostersRelations = relations(
       references: [coursesTable.id],
     }),
 
-    // Creator of this lesson roster
+    // Creator (teacher/instructor) of this lesson roster
     creator: one(usersTable, {
       fields: [lessonRostersTable.creatorId],
       references: [usersTable.id],
@@ -353,14 +402,25 @@ export const lessonRostersRelations = relations(
     // Sessions/periods in this lesson roster
     sessions: many(sessionsTable),
 
-    // Students enrolled in this lesson roster
+    // Students enrolled in this lesson roster (join table)
     enrolledStudents: many(studentsToLessonRosters),
   })
 );
 
-// Marks Relations
+// Roles Relationships
+export const rolesRelations = relations(rolesTable, ({ many }) => ({
+  // Users with this role
+  users: many(usersTable),
+
+  // Role permissions (for this role)
+  permissions: many(rolePermissionsTable, {
+    relationName: "rolePermissions",
+  }),
+}));
+
+// Marks Relationships
 export const marksRelations = relations(marks, ({ one }) => ({
-  // Field this mark belongs to
+  // Field associated with this mark
   field: one(fields, {
     fields: [marks.fieldId],
     references: [fields.id],
@@ -374,7 +434,7 @@ export const marksRelations = relations(marks, ({ one }) => ({
   }),
 }));
 
-// Sessions Relations
+// Sessions Relationships
 export const sessionsRelations = relations(sessionsTable, ({ one, many }) => ({
   // Lesson roster this session belongs to
   lessonRoster: one(lessonRostersTable, {
@@ -386,7 +446,7 @@ export const sessionsRelations = relations(sessionsTable, ({ one, many }) => ({
   attendanceRecords: many(attendanceTable),
 }));
 
-// Attendance Relations
+// Attendance Relationships
 export const attendanceRelations = relations(attendanceTable, ({ one }) => ({
   // Student whose attendance is recorded
   student: one(usersTable, {
@@ -402,7 +462,7 @@ export const attendanceRelations = relations(attendanceTable, ({ one }) => ({
   }),
 }));
 
-// StudentsToLessonRosters Relations
+// Students To Lesson Rosters (Join Table) Relationships
 export const studentsToLessonRostersRelations = relations(
   studentsToLessonRosters,
   ({ one }) => ({
@@ -420,40 +480,84 @@ export const studentsToLessonRostersRelations = relations(
   })
 );
 
-// UserToDepartment Relations
+// User To Department (Join Table) Relationships
 export const userToDepartmentRelations = relations(
-  userToDepartment,
+  userToDepartmentsTable,
   ({ one }) => ({
-    // User in this department membership
+    // The user in this department membership
     user: one(usersTable, {
-      fields: [userToDepartment.userId],
+      fields: [userToDepartmentsTable.userId],
       references: [usersTable.id],
     }),
 
     // Department the user belongs to
     department: one(departmentsTable, {
-      fields: [userToDepartment.departmentId],
+      fields: [userToDepartmentsTable.departmentId],
       references: [departmentsTable.id],
+    }),
+
+    // The department role for this membership
+    role: one(departmentRolesTable, {
+      fields: [userToDepartmentsTable.departmentRoleId],
+      references: [departmentRolesTable.id],
     }),
   })
 );
 
-// ParentDependents Relations (Guardian-Dependent relationship)
-export const parentDependantsRelations = relations(
-  parentDepandants,
+// Department Roles Relationships
+export const departmentRolesRelations = relations(
+  departmentRolesTable,
+  ({ many }) => ({
+    // Users with this department role (via join table)
+    userDepartments: many(userToDepartmentsTable),
+    // Permissions associated with this department role
+    permissions: many(departmentRolePermissionsTable, {
+      relationName: "departmentRolePermissions",
+      // fields: [departmentRolePermissionsTable.departmentRoleId],
+      // references: [departmentRolesTable.id],
+    }),
+  })
+);
+
+// Guardian-Dependants Relationships
+export const guardianDependantsRelations = relations(
+  guardianDependantsTable,
   ({ one }) => ({
     // Guardian user
     guardian: one(usersTable, {
-      fields: [parentDepandants.guardianId],
+      fields: [guardianDependantsTable.guardianId],
       references: [usersTable.id],
       relationName: "guardianToDependents",
     }),
 
     // Dependent user
     dependent: one(usersTable, {
-      fields: [parentDepandants.dependentId],
+      fields: [guardianDependantsTable.dependentId],
       references: [usersTable.id],
       relationName: "dependentToGuardians",
+    }),
+  })
+);
+
+// (Optional) Role Permissions Relationship (if you want a reverse relation)
+export const rolePermissionsRelations = relations(
+  rolePermissionsTable,
+  ({ one }) => ({
+    role: one(rolesTable, {
+      fields: [rolePermissionsTable.roleId],
+      references: [rolesTable.id],
+      relationName: "rolePermissions",
+    }),
+  })
+);
+
+// (Optional) User Permissions Relationship (if needed)
+export const userPermissionsRelations = relations(
+  userPermissionsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [userPermissionsTable.userId],
+      references: [usersTable.id],
     }),
   })
 );
