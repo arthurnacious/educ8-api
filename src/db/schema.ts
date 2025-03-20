@@ -8,6 +8,7 @@ import {
   numeric,
   uuid,
   primaryKey,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { AttendanceName } from "@/types/attendance";
 import { departmentRole, userRole } from "@/types/roles";
@@ -39,8 +40,6 @@ export const rolesTable = pgTable("roles", {
     .$defaultFn(() => crypto.randomUUID()),
   name: userRoleEnum("role").notNull(),
   description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const usersTable = pgTable("users", {
@@ -73,7 +72,7 @@ export const departmentsTable = pgTable("departments", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export const coursesTable = pgTable("course", {
+export const coursesTable = pgTable("courses", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -106,7 +105,7 @@ export const fields = pgTable("field", {
   name: varchar("name", { length: 255 }).notNull(),
 });
 
-export const lessonRostersTable = pgTable("lessonRoster", {
+export const lessonRostersTable = pgTable("lessonRosters", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -116,13 +115,12 @@ export const lessonRostersTable = pgTable("lessonRoster", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  creatorId: uuid("creatorId")
+  lecturerId: uuid("lecturerId")
     .notNull()
     .references(() => usersTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  name: varchar("name", { length: 255 }),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -131,7 +129,7 @@ export const lessonRostersTable = pgTable("lessonRoster", {
     .$onUpdate(() => new Date()),
 });
 
-export const marks = pgTable("mark", {
+export const marksTable = pgTable("marks", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -161,6 +159,8 @@ export const sessionsTable = pgTable("sessions", {
       onUpdate: "cascade",
     }),
   name: varchar("name", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const departmentRolesTable = pgTable("department_roles", {
@@ -169,8 +169,6 @@ export const departmentRolesTable = pgTable("department_roles", {
     .$defaultFn(() => crypto.randomUUID()),
   name: departmentRoleEnum("role").notNull(),
   description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const departmentRolePermissionsTable = pgTable(
@@ -189,7 +187,7 @@ export const departmentRolePermissionsTable = pgTable(
   }
 );
 
-export const attendanceTable = pgTable("attendance", {
+export const attendanceTable = pgTable("attendances", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -305,6 +303,19 @@ export const userPermissionsTable = pgTable("user_permissions", {
   name: text("name").notNull(), // Custom permission for this user
 });
 
+export const auditLogsTable = pgTable("audit_logs", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: uuid("user_id").notNull(), // Who performed the action
+  action: text("action").notNull(), // "create", "update", "delete"
+  model: text("model").notNull(), // Affected table name
+  modelId: uuid("model_id"), // Nullable for deletes
+  before: jsonb("before"), // Previous state
+  after: jsonb("after"), // New state
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 //? Relationships
 // Users Relations
 export const usersRelations = relations(usersTable, ({ many, one }) => ({
@@ -321,7 +332,7 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   enrolledClasses: many(studentsToLessonRosters),
 
   // User's marks/grades
-  marks: many(marks, { relationName: "studentMarks" }),
+  marks: many(marksTable, { relationName: "studentMarks" }),
 
   // Classes created by this user (as a teacher/instructor)
   createdLessonRosters: many(lessonRostersTable, {
@@ -380,7 +391,7 @@ export const fieldsRelations = relations(fields, ({ one, many }) => ({
   }),
 
   // Marks/grades associated with this field
-  marks: many(marks),
+  marks: many(marksTable),
 }));
 
 // Lesson Rosters Relationships
@@ -395,7 +406,7 @@ export const lessonRostersRelations = relations(
 
     // Creator (teacher/instructor) of this lesson roster
     creator: one(usersTable, {
-      fields: [lessonRostersTable.creatorId],
+      fields: [lessonRostersTable.lecturerId],
       references: [usersTable.id],
     }),
 
@@ -408,7 +419,7 @@ export const lessonRostersRelations = relations(
 );
 
 // Roles Relationships
-export const rolesRelations = relations(rolesTable, ({ many }) => ({
+export const rolesTableRelations = relations(rolesTable, ({ many }) => ({
   // Users with this role
   users: many(usersTable),
 
@@ -419,16 +430,16 @@ export const rolesRelations = relations(rolesTable, ({ many }) => ({
 }));
 
 // Marks Relationships
-export const marksRelations = relations(marks, ({ one }) => ({
+export const marksTableRelations = relations(marksTable, ({ one }) => ({
   // Field associated with this mark
   field: one(fields, {
-    fields: [marks.fieldId],
+    fields: [marksTable.fieldId],
     references: [fields.id],
   }),
 
   // Student who received this mark
   student: one(usersTable, {
-    fields: [marks.studentId],
+    fields: [marksTable.studentId],
     references: [usersTable.id],
     relationName: "studentMarks",
   }),

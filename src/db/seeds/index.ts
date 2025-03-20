@@ -1,4 +1,5 @@
 import { attendanceTableSeeder } from "./tables/attendance-table-seeder";
+import { auditLogsTableSeeder } from "./tables/audit-logs-table-seeder";
 import { coursesTableSeeder } from "./tables/course-seeder-options";
 import { departmentsTableSeeder } from "./tables/departments-table-seeder";
 import { fieldsTableSeeder } from "./tables/fields-table-seeder";
@@ -26,6 +27,7 @@ export interface SeedOptions {
   attendance?: number;
   studentToLesonRosters?: number;
   marks?: number;
+  auditLogs?: number;
   batch?: number;
 }
 
@@ -121,22 +123,28 @@ async function seed(options: SeedOptions = {}) {
     await marksTableSeeder(marks, { batch });
   }
 
+  if (auditLogs > 0) {
+    console.log(`\n--- Seeding ${auditLogs} marks ---`);
+    await auditLogsTableSeeder(auditLogs, { batch });
+  }
+
   console.timeEnd("Seeding database");
 }
 
-const users = 5000;
+const users = 10000;
 const guardianDependants = users * 3;
 const permissions = 100;
 const roles = 10;
-const departments = 20;
-const userToDepartments = 50;
+const departments = 50;
+const userToDepartments = 100000;
 const courses = 105000;
 const fields = 3;
-const lessonrosters = 10;
-const sessions = 10;
+const lessonrosters = 200;
+const sessions = 30;
 const attendance = 100;
 const studentToLesonRosters = 300;
 const marks = 100;
+const auditLogs = 2000000;
 
 async function main() {
   await seed({
@@ -153,7 +161,8 @@ async function main() {
     attendance,
     studentToLesonRosters,
     marks,
-    batch: 1000,
+    auditLogs,
+    batch: 1500,
   });
 }
 

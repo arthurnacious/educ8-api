@@ -1,4 +1,4 @@
-import { marks } from "@/db/schema";
+import { marksTable } from "@/db/schema";
 import { usersTable, fields } from "@/db/schema";
 import db from "@/db";
 import { faker } from "@faker-js/faker";
@@ -13,7 +13,7 @@ export async function marksTableSeeder(
   options: SeederOptions = {}
 ) {
   const { batch = 50, customFields = {} } = options;
-  await db.delete(marks);
+  await db.delete(marksTable);
   console.log(`Seeding ${count} marks in batches of ${batch}...`);
 
   const fieldsList = await db.select().from(fields);
@@ -39,9 +39,9 @@ export async function marksTableSeeder(
     console.log(
       `Inserting batch ${i / batch + 1} (${marksData.length} marks)...`
     );
-    await db.insert(marks).values(marksData);
+    await db.insert(marksTable).values(marksData);
   }
 
   console.log(`Successfully seeded ${count} marks.`);
-  return await db.select().from(marks);
+  return await db.select().from(marksTable);
 }

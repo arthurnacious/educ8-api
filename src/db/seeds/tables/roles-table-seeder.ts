@@ -9,8 +9,6 @@ interface RoleSeederOptions {
 }
 
 export async function rolesTableSeeder(options: RoleSeederOptions = {}) {
-  const { batch = 100, customFields = {} } = options;
-
   await db.delete(rolesTable);
   await db.delete(departmentRolesTable);
 
@@ -20,24 +18,22 @@ export async function rolesTableSeeder(options: RoleSeederOptions = {}) {
   console.log(`Seeding ${roleValues.length} roles...`);
 
   const roleData = roleValues.map((role, index) => {
+    const date = faker.date.past();
     return {
-      name: customFields.name?.(index) || role,
-      description:
-        customFields.description?.(index) ||
-        faker.lorem.sentence({ min: 10, max: 20 }),
-      createdAt: customFields.createdAt?.(index) || faker.date.past(),
-      updatedAt: customFields.updatedAt?.(index) || new Date(),
+      name: role,
+      description: faker.lorem.sentence({ min: 10, max: 20 }),
+      createdAt: date,
+      updatedAt: date,
     };
   });
 
   const departmentRoleData = departmentRoleValues.map((role, index) => {
+    const date = faker.date.past();
     return {
-      name: customFields.name?.(index) || role,
-      description:
-        customFields.description?.(index) ||
-        faker.lorem.sentence({ min: 10, max: 20 }),
-      createdAt: customFields.createdAt?.(index) || faker.date.past(),
-      updatedAt: customFields.updatedAt?.(index) || new Date(),
+      name: role,
+      description: faker.lorem.sentence({ min: 10, max: 50 }),
+      createdAt: date,
+      updatedAt: date,
     };
   });
 

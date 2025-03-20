@@ -30,7 +30,7 @@ const assignUserToDepartmentSchema = z.object({
   departmentId: z.string().min(1, {
     message: "Department Must be selected",
   }),
-  role: z.nativeEnum(departmentRole).default(departmentRole.LECTURER),
+  departmentRole: z.nativeEnum(departmentRole).default(departmentRole.LECTURER),
 });
 
 const unassignUsersToDeprtmentSchema = z.object({
@@ -42,49 +42,79 @@ departments.use("*", authMiddleware);
 
 departments
   .get("/", async (ctx) => {
-    // Get the 'search' query parameter from the request
     const searchQuery = ctx.req.query("search");
 
-    let data;
     if (searchQuery) {
-      // If a search query exists, filter users based on the search term
-      data = await db.query.departmentsTable.findMany({
-        where: (user, { ilike }) => ilike(user.name, `%${searchQuery}%`), // Adjust 'name' if you're searching by another field
+      // Perform a filtered search
+      const data = await db.query.departmentsTable.findMany({
+        where: (departmentsTable, { ilike }) =>
+          ilike(departmentsTable.name, `%${searchQuery}%`),
       });
-    } else {
-      data = await db
-        .select({
-          id: departmentsTable.id,
-          name: departmentsTable.name,
-          slug: departmentsTable.slug,
-          createdAt: departmentsTable.createdAt,
-          updatedAt: departmentsTable.updatedAt,
-          leadersCount: sql<number>`
-        (SELECT COUNT(*) 
-         FROM ${userToDepartment} 
-         WHERE ${userToDepartment.role} = ${departmentRole.LEADER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
-        )`.as("leaders_count"),
-          lecturersCount: sql<number>`
-        (SELECT COUNT(*) 
-         FROM ${userToDepartment} 
-         WHERE ${userToDepartment.role} = ${departmentRole.LECTURER} AND ${userToDepartment.departmentId} = ${departmentsTable.id}
-        )`.as("lecturers_count"),
-          coursesCount: sql`count(distinct ${coursesTable.id})`.as(
-            "courses_count"
-          ),
-        })
-        .from(departmentsTable)
-        .leftJoin(
-          coursesTable,
-          eq(departmentsTable.id, coursesTable.departmentId)
-        )
-        .leftJoin(
-          userToDepartment,
-          eq(departmentsTable.id, userToDepartment.departmentId)
-        )
-        .groupBy(departmentsTable.id)
-        .execute();
+      return ctx.json({ data });
     }
+
+    // Fetch role IDs in parallel
+    const [leaderRole, lecturerRole, students] = await Promise.all([
+      db.query.departmentRolesTable.findFirst({
+        where: (departmentRolesTable, { eq }) =>
+          eq(departmentRolesTable.name, departmentRole.LEADER),
+        columns: { id: true },
+      }),
+      db.query.departmentRolesTable.findFirst({
+        where: (departmentRolesTable, { eq }) =>
+          eq(departmentRolesTable.name, departmentRole.LECTURER),
+        columns: { id: true },
+      }),
+      db.query.departmentRolesTable.findFirst({
+        where: (departmentRolesTable, { eq }) =>
+          eq(departmentRolesTable.name, departmentRole.STUDENT),
+        columns: { id: true },
+      }),
+    ]);
+
+    if (!leaderRole?.id || !lecturerRole?.id || !students?.id) {
+      throw new Error("Required department roles not found.");
+    }
+
+    const leaderRoleId = leaderRole.id;
+    const lecturerRoleId = lecturerRole.id;
+    const studentRoleId = students.id;
+
+    // Fetch departments with counts
+    const data = await db
+      .select({
+        id: departmentsTable.id,
+        name: departmentsTable.name,
+        slug: departmentsTable.slug,
+        createdAt: departmentsTable.createdAt,
+        updatedAt: departmentsTable.updatedAt,
+        leadersCount: sql<number>`
+        (SELECT COUNT(*) 
+         FROM ${userToDepartmentsTable} 
+         WHERE ${eq(userToDepartmentsTable.departmentRoleId, leaderRoleId)} 
+         AND ${eq(userToDepartmentsTable.departmentId, departmentsTable.id)}
+        )`.as("leaders_count"),
+        lecturersCount: sql<number>`
+        (SELECT COUNT(*) 
+         FROM ${userToDepartmentsTable} 
+         WHERE ${eq(userToDepartmentsTable.departmentRoleId, lecturerRoleId)} 
+         AND ${eq(userToDepartmentsTable.departmentId, departmentsTable.id)}
+        )`.as("lecturers_count"),
+        coursesCount: sql<number>`
+        (SELECT COUNT(*) 
+         FROM ${coursesTable} 
+         WHERE ${eq(coursesTable.departmentId, departmentsTable.id)}
+        )`.as("courses_count"),
+        studentsCount: sql<number>`
+        (SELECT COUNT(*) 
+         FROM ${userToDepartmentsTable} 
+         WHERE ${eq(userToDepartmentsTable.departmentRoleId, studentRoleId)} 
+         AND ${eq(userToDepartmentsTable.departmentId, departmentsTable.id)}
+        )`.as("sstudents_count"),
+      })
+      .from(departmentsTable)
+      .orderBy(departmentsTable.name)
+      .execute();
 
     return ctx.json({ data });
   })
@@ -217,12 +247,18 @@ departments
         return ctx.json({ error: validatedData.error.format() }, 400);
       }
 
-      const { userId, departmentId, role } = validatedData.data;
+      const { userId, departmentId, departmentRole } = validatedData.data;
 
-      const data = await db.insert(userToDepartment).values({
+      const [{ id: departmentRoleId }] =
+        await db.query.departmentRolesTable.findMany({
+          where: (departmentRolesTable, { eq }) =>
+            eq(departmentRolesTable.name, departmentRole),
+        });
+
+      const data = await db.insert(userToDepartmentsTable).values({
         userId,
         departmentId,
-        role,
+        departmentRoleId,
       });
 
       return ctx.json({ data }, 200);
