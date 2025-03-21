@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import departments from "./routes/departments";
-import me from "./routes/me";
+import personal from "./routes/personal";
 import auth from "./routes/auth";
+import auditLogs from "./routes/audit-logs";
 import users from "./routes/users";
 import courses from "./routes/courses";
 import lessonRosters from "./routes/lesson-rosters";
@@ -15,7 +16,8 @@ app
     return c.json({ message: "Hi School Manager!" });
   })
   .route("/auth", auth)
-  .route("/me", me)
+  .route("/audit-logs", auditLogs)
+  .route("/personal", personal)
   .route("/courses", courses)
   .route("/departments", departments)
   .route("/lesson-rosters", lessonRosters)

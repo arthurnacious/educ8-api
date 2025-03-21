@@ -1,9 +1,5 @@
 import db from "@/db";
-import {
-  lessonRostersTable,
-  studentsToLessonRosters,
-  usersTable,
-} from "@/db/schema";
+import { lessonRostersTable, enrollmentsTable, usersTable } from "@/db/schema";
 import { faker } from "@faker-js/faker";
 
 interface SeederOptions {
@@ -11,12 +7,12 @@ interface SeederOptions {
   customFields?: Record<string, (index: number) => any>;
 }
 
-export async function studentsToLessonRostersSeeder(
+export async function enrollmentsTableSeeder(
   count: number,
   options: SeederOptions = {}
 ) {
   const { batch = 100, customFields = {} } = options;
-  await db.delete(studentsToLessonRosters);
+  await db.delete(enrollmentsTable);
   console.log(
     `Seeding ${count} student-lesson roster associations in batches of ${batch}...`
   );
@@ -78,7 +74,7 @@ export async function studentsToLessonRostersSeeder(
         associationBatch.length
       } associations)...`
     );
-    await db.insert(studentsToLessonRosters).values(associationBatch);
+    await db.insert(enrollmentsTable).values(associationBatch);
   }
 
   console.log(

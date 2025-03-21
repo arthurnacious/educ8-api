@@ -9,7 +9,7 @@ import { marksTableSeeder } from "./tables/marks-table-seeder";
 import { permissionsTableSeeder } from "./tables/permissions-table-seeder";
 import { rolesTableSeeder } from "./tables/roles-table-seeder";
 import { sessionsTableSeeder } from "./tables/sessions-table-seeder";
-import { studentsToLessonRostersSeeder } from "./tables/students-to-lesson-rosters";
+import { enrollmentsTableSeeder } from "./tables/enrollments-table-seeder";
 import { userToDepartmentSeeder } from "./tables/user-to-department-seeder";
 import { usersTableSeeder } from "./tables/users-table-seeder";
 
@@ -115,7 +115,7 @@ async function seed(options: SeedOptions = {}) {
     console.log(
       `\n--- Seeding ${studentToLesonRosters} studentToLesonRosters ---`
     );
-    await studentsToLessonRostersSeeder(studentToLesonRosters, { batch });
+    await enrollmentsTableSeeder(studentToLesonRosters, { batch });
   }
 
   if (marks > 0) {
@@ -137,9 +137,9 @@ const permissions = 100;
 const roles = 10;
 const departments = 50;
 const userToDepartments = 100000;
-const courses = 105000;
+const courses = 1000;
 const fields = 3;
-const lessonrosters = 200;
+const lessonrosters = 40;
 const sessions = 30;
 const attendance = 100;
 const studentToLesonRosters = 300;

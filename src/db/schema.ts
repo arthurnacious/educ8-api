@@ -122,7 +122,35 @@ export const lessonRostersTable = pgTable("lessonRosters", {
       onUpdate: "cascade",
     }),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
+  effectiveCoursePrice: numeric("effectiveCoursePrice", {
+    precision: 10,
+    scale: 2,
+  }),
   notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const paymentsTable = pgTable("payments", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  classId: uuid("classId")
+    .notNull()
+    .references(() => lessonRostersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  paymentMethod: paymentMethodEnum("payment_method").notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
@@ -208,8 +236,8 @@ export const attendanceTable = pgTable("attendances", {
     .notNull(),
 });
 
-export const studentsToLessonRosters = pgTable(
-  "studentToLessonRoster",
+export const enrollmentsTable = pgTable(
+  "enrollments",
   {
     studentId: uuid("studentId")
       .notNull()
@@ -217,7 +245,7 @@ export const studentsToLessonRosters = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    lessonRosterId: uuid("lessonRosterId")
+    lessonRosterId: uuid("classId")
       .notNull()
       .references(() => lessonRostersTable.id, {
         onDelete: "cascade",
@@ -307,7 +335,10 @@ export const auditLogsTable = pgTable("audit_logs", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  userId: uuid("user_id").notNull(), // Who performed the action
+  userId: uuid("user_id").references(() => usersTable.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }), // Who performed the action
   action: text("action").notNull(), // "create", "update", "delete"
   model: text("model").notNull(), // Affected table name
   modelId: uuid("model_id"), // Nullable for deletes
@@ -328,8 +359,13 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     references: [rolesTable.id],
   }),
 
+  // User's audit logs
+  auditLogs: many(auditLogsTable, {
+    relationName: "auditLogs",
+  }),
+
   // Classes the user is enrolled in (as a student)
-  enrolledClasses: many(studentsToLessonRosters),
+  enrolledClasses: many(enrollmentsTable),
 
   // User's marks/grades
   marks: many(marksTable, { relationName: "studentMarks" }),
@@ -356,6 +392,15 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
 
   // Custom permissions directly assigned to the user
   permissions: many(userPermissionsTable),
+}));
+
+// Audit Logs Relationships
+export const auditLogsRelations = relations(auditLogsTable, ({ one }) => ({
+  // User who performed the action
+  user: one(usersTable, {
+    fields: [auditLogsTable.userId],
+    references: [usersTable.id],
+  }),
 }));
 
 // Departments Relationships
@@ -414,7 +459,7 @@ export const lessonRostersRelations = relations(
     sessions: many(sessionsTable),
 
     // Students enrolled in this lesson roster (join table)
-    enrolledStudents: many(studentsToLessonRosters),
+    enrolledStudents: many(enrollmentsTable),
   })
 );
 
@@ -474,18 +519,18 @@ export const attendanceRelations = relations(attendanceTable, ({ one }) => ({
 }));
 
 // Students To Lesson Rosters (Join Table) Relationships
-export const studentsToLessonRostersRelations = relations(
-  studentsToLessonRosters,
+export const enrollmentsTableRelations = relations(
+  enrollmentsTable,
   ({ one }) => ({
     // Student in this enrollment
     student: one(usersTable, {
-      fields: [studentsToLessonRosters.studentId],
+      fields: [enrollmentsTable.studentId],
       references: [usersTable.id],
     }),
 
     // Lesson roster the student is enrolled in
     lessonRoster: one(lessonRostersTable, {
-      fields: [studentsToLessonRosters.lessonRosterId],
+      fields: [enrollmentsTable.lessonRosterId],
       references: [lessonRostersTable.id],
     }),
   })
