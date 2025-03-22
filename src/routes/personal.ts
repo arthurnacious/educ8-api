@@ -50,7 +50,11 @@ async function getEnrolledCourses(userId: string) {
     .select({
       id: lessonRostersTable.id,
       courseName: coursesTable.name,
-      departmentName: departmentsTable.name, // Get department name
+      departmentName: departmentsTable.name,
+      lecturer: {
+        name: usersTable.name,
+        image: usersTable.image,
+      },
       createdAt: lessonRostersTable.createdAt,
     })
     .from(enrollmentsTable)
@@ -65,6 +69,10 @@ async function getEnrolledCourses(userId: string) {
     .innerJoin(
       departmentsTable,
       eq(coursesTable.departmentId, departmentsTable.id) // Join to get department name
+    )
+    .innerJoin(
+      usersTable,
+      eq(lessonRostersTable.lecturerId, usersTable.id) // Join to get department name
     )
     .where(eq(enrollmentsTable.studentId, userId));
 
@@ -98,6 +106,10 @@ async function getDepartmentClasses(userId: string) {
       id: lessonRostersTable.id,
       courseName: coursesTable.name,
       departmentName: departmentsTable.name,
+      lecturer: {
+        name: usersTable.name,
+        image: usersTable.image,
+      },
       createdAt: lessonRostersTable.createdAt,
     })
     .from(userToDepartmentsTable)
@@ -114,6 +126,7 @@ async function getDepartmentClasses(userId: string) {
       lessonRostersTable,
       eq(lessonRostersTable.courseId, coursesTable.id)
     )
+    .innerJoin(usersTable, eq(lessonRostersTable.lecturerId, usersTable.id))
     .where(
       and(
         eq(userToDepartmentsTable.userId, userId),

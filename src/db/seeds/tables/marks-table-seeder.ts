@@ -1,5 +1,5 @@
 import { marksTable } from "@/db/schema";
-import { usersTable, fields } from "@/db/schema";
+import { usersTable } from "@/db/schema";
 import db from "@/db";
 import { faker } from "@faker-js/faker";
 
@@ -12,34 +12,69 @@ export async function marksTableSeeder(
   count: number,
   options: SeederOptions = {}
 ) {
-  const { batch = 50, customFields = {} } = options;
+  const { batch = 50 } = options;
   await db.delete(marksTable);
   console.log(`Seeding ${count} marks in batches of ${batch}...`);
 
-  const fieldsList = await db.select().from(fields);
-  const students = await db.select().from(usersTable);
+  // Fetch lesson rosters with fields
+  const lessonRosters = await db.query.lessonRostersTable.findMany({
+    columns: { id: true },
+    with: {
+      course: {
+        columns: {},
+        with: {
+          fields: { columns: { name: true, passRate: true } },
+        },
+      },
+    },
+  });
 
-  const fieldIds = fieldsList.map((field) => field.id);
-  const studentIds = students.map((student) => student.id);
-
-  if (fieldsList.length === 0 || students.length === 0) {
-    throw new Error("Ensure fields and users are seeded before seeding marks.");
+  // Fetch students once
+  const students = await db.select().from(usersTable).limit(20);
+  if (!lessonRosters.length || !students.length) {
+    console.error(
+      "Error: Ensure fields and users are seeded before seeding marks."
+    );
+    throw new Error("Missing required lesson rosters or students.");
   }
 
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);
-    const marksData = Array.from({ length: batchSize }, () => {
-      return {
-        fieldId: faker.helpers.arrayElement(fieldIds),
-        studentId: faker.helpers.arrayElement(studentIds),
-        amount: (Math.floor(Math.random() * 100) + 1) as unknown as string,
-      };
-    });
+    const marksData: any[] = [];
 
-    console.log(
-      `Inserting batch ${i / batch + 1} (${marksData.length} marks)...`
-    );
-    await db.insert(marksTable).values(marksData);
+    for (const lessonRoster of lessonRosters) {
+      if (!lessonRoster.course?.fields?.length) {
+        console.warn(
+          `Skipping lessonRosterId ${lessonRoster.id} due to missing fields.`
+        );
+        continue;
+      }
+
+      for (const field of lessonRoster.course.fields) {
+        for (const student of students.slice(0, batchSize)) {
+          marksData.push({
+            lessonRosterId: lessonRoster.id,
+            name: field.name,
+            passRate: field.passRate,
+            studentId: student.id,
+            amount: String(faker.number.int({ min: 1, max: 100 })), // Generate per student
+          });
+
+          // Prevent exceeding max call stack
+          if (marksData.length >= batch) {
+            console.log(`Inserting batch (${marksData.length} marks)...`);
+            await db.insert(marksTable).values(marksData);
+            marksData.length = 0; // Clear the array after insertion
+          }
+        }
+      }
+    }
+
+    // Insert any remaining data
+    if (marksData.length > 0) {
+      console.log(`Inserting final batch (${marksData.length} marks)...`);
+      await db.insert(marksTable).values(marksData);
+    }
   }
 
   console.log(`Successfully seeded ${count} marks.`);

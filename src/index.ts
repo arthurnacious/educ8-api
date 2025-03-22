@@ -1,12 +1,15 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import departments from "./routes/departments";
-import personal from "./routes/personal";
+
 import auth from "./routes/auth";
 import auditLogs from "./routes/audit-logs";
-import users from "./routes/users";
+import classes from "./routes/classes";
 import courses from "./routes/courses";
+import departments from "./routes/departments";
 import lessonRosters from "./routes/lesson-rosters";
+import personal from "./routes/personal";
+import users from "./routes/users";
+import db from "./db";
 
 const app = new Hono();
 app.use("*", cors());
@@ -17,11 +20,21 @@ app
   })
   .route("/auth", auth)
   .route("/audit-logs", auditLogs)
-  .route("/personal", personal)
+  .route("/classes", classes)
   .route("/courses", courses)
   .route("/departments", departments)
   .route("/lesson-rosters", lessonRosters)
-  .route("/users", users);
+  .route("/personal", personal)
+  .route("/users", users)
+  .get("/test", async (c) => {
+    const course = await db.query.coursesTable.findFirst({
+      with: {
+        fields: true,
+      },
+    });
+
+    return c.json({ course });
+  });
 
 export default {
   port: 8000,

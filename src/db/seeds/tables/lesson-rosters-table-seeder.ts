@@ -46,6 +46,7 @@ export async function lessonRostersTableSeeder(
         return {
           courseId: course.id,
           lecturerId: lecturer.id,
+          effectiveCoursePrice: course.price,
           slug: slugify(
             `${course.name} ${faker.lorem.slug()} ${faker.date.past()}`
           ),
