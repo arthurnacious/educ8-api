@@ -59,6 +59,21 @@ export const usersTable = pgTable("users", {
   image: varchar("image", { length: 255 }),
 });
 
+export const refreshTokensTable = pgTable("refresh_tokens", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: uuid("user_id")
+    .references(() => usersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const departmentsTable = pgTable("departments", {
   id: uuid("id")
     .primaryKey()
