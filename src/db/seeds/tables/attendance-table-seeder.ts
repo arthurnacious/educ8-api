@@ -1,9 +1,4 @@
-import {
-  sessionsTable,
-  attendanceTable,
-  coursesToDepartments,
-  usersTable,
-} from "@/db/schema";
+import { sessionsTable, attendanceTable, usersTable } from "@/db/schema";
 import db from "@/db";
 import { fa, faker } from "@faker-js/faker";
 import { AttendanceName } from "@/types/attendance";

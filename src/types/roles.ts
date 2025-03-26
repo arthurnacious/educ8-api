@@ -29,11 +29,11 @@ export enum userPrivilege {
   UPDATE_DEPARTMENTS = "can_update_departments",
   DELETE_DEPARTMENTS = "can_delete_departments",
 
-  // Courses
-  CREATE_COURSES = "can_create_courses",
-  READ_COURSES = "can_read_courses",
-  UPDATE_COURSES = "can_update_courses",
-  DELETE_COURSES = "can_delete_courses",
+  // Subjects
+  CREATE_SUBJECTS = "can_create_subjects",
+  READ_SUBJECTS = "can_read_subjects",
+  UPDATE_SUBJECTS = "can_update_subjects",
+  DELETE_SUBJECTS = "can_delete_subjects",
 
   // Lesson Rosters
   CREATE_LESSON_ROSTERS = "can_create_lesson_rosters",
@@ -41,7 +41,7 @@ export enum userPrivilege {
   UPDATE_LESSON_ROSTERS = "can_update_lesson_rosters",
   DELETE_LESSON_ROSTERS = "can_delete_lesson_rosters",
 
-  // Sessions (Every lesson or a course)
+  // Sessions (Every lesson or a subject)
   CREATE_SESSIONS = "can_create_sessions",
   READ_SESSIONS = "can_read_sessions",
   UPDATE_SESSIONS = "can_update_sessions",

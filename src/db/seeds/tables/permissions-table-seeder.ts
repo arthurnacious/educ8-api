@@ -34,15 +34,15 @@ export async function permissionsTableSeeder(
     "can_view_class_enrollment",
     "can_view_class_grades",
 
-    // Courses Permissions
-    "can_create_course",
-    "can_delete_course",
-    "can_edit_course",
-    "can_enroll_in_course",
-    "can_view_course",
-    "can_view_course_content",
-    "can_view_course_enrollment",
-    "can_view_course_grades",
+    // Subjects Permissions
+    "can_create_subject",
+    "can_delete_subject",
+    "can_edit_subject",
+    "can_enroll_in_subject",
+    "can_view_subject",
+    "can_view_subject_content",
+    "can_view_subject_enrollment",
+    "can_view_subject_grades",
 
     // Departments Permissions
     "can_create_department",
@@ -50,7 +50,7 @@ export async function permissionsTableSeeder(
     "can_edit_department",
     "can_view_department",
     "can_view_department_budget",
-    "can_view_department_courses",
+    "can_view_department_subjects",
     "can_view_department_staff",
 
     // Finances Permissions

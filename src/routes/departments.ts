@@ -3,7 +3,7 @@ import { JwtVariables } from "hono/jwt";
 import db from "@/db";
 import { and, eq, sql } from "drizzle-orm";
 import {
-  coursesTable,
+  subjectsTable,
   departmentsTable,
   userToDepartmentsTable,
 } from "@/db/schema";
@@ -100,11 +100,11 @@ departments
          WHERE ${eq(userToDepartmentsTable.departmentRoleId, lecturerRoleId)} 
          AND ${eq(userToDepartmentsTable.departmentId, departmentsTable.id)}
         )`.as("lecturers_count"),
-        coursesCount: sql<number>`
+        subjectsCount: sql<number>`
         (SELECT COUNT(*) 
-         FROM ${coursesTable} 
-         WHERE ${eq(coursesTable.departmentId, departmentsTable.id)}
-        )`.as("courses_count"),
+         FROM ${subjectsTable} 
+         WHERE ${eq(subjectsTable.departmentId, departmentsTable.id)}
+        )`.as("subjects_count"),
         studentsCount: sql<number>`
         (SELECT COUNT(*) 
          FROM ${userToDepartmentsTable} 
@@ -197,7 +197,7 @@ departments
             },
           },
         },
-        courses: {
+        subjects: {
           columns: {
             id: true,
             name: true,

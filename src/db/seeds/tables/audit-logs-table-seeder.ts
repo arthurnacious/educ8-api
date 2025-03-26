@@ -37,7 +37,7 @@ export async function auditLogsTableSeeder(
   }
 
   const actions = ["created", "updated", "deleted", "assigned", "unassigned"];
-  const models = ["users", "courses", "departments", "classes", "roles"];
+  const models = ["users", "subjects", "departments", "classes", "roles"];
 
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);

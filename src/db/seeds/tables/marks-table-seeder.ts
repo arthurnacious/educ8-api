@@ -20,7 +20,7 @@ export async function marksTableSeeder(
   const lessonRosters = await db.query.lessonRostersTable.findMany({
     columns: { id: true },
     with: {
-      course: {
+      subject: {
         columns: {},
         with: {
           fields: { columns: { name: true, passRate: true } },
@@ -43,14 +43,14 @@ export async function marksTableSeeder(
     const marksData: any[] = [];
 
     for (const lessonRoster of lessonRosters) {
-      if (!lessonRoster.course?.fields?.length) {
+      if (!lessonRoster.subject?.fields?.length) {
         console.warn(
           `Skipping lessonRosterId ${lessonRoster.id} due to missing fields.`
         );
         continue;
       }
 
-      for (const field of lessonRoster.course.fields) {
+      for (const field of lessonRoster.subject.fields) {
         for (const student of students.slice(0, batchSize)) {
           marksData.push({
             lessonRosterId: lessonRoster.id,

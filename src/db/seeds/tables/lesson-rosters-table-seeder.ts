@@ -1,4 +1,4 @@
-import { lessonRostersTable, coursesTable, usersTable } from "@/db/schema";
+import { lessonRostersTable, subjectsTable, usersTable } from "@/db/schema";
 import db from "@/db";
 import { faker } from "@faker-js/faker";
 import { slugify } from "@/utils";
@@ -23,19 +23,21 @@ export async function lessonRostersTableSeeder(
   await db.delete(lessonRostersTable);
   console.log(`Seeding lesson rosters in batches of ${batch}...`);
 
-  const courses = await db.select().from(coursesTable);
+  const subjects = await db.select().from(subjectsTable);
   const users = await db.select().from(usersTable);
-  if (courses.length === 0) {
-    throw new Error("Ensure courses are seeded before seeding lesson rosters.");
+  if (subjects.length === 0) {
+    throw new Error(
+      "Ensure subjects are seeded before seeding lesson rosters."
+    );
   }
   if (users.length === 0) {
     throw new Error("Ensure users are seeded before seeding lesson rosters.");
   }
 
-  for (const course of courses) {
+  for (const subject of subjects) {
     const totalLessonRosters = getRandomWithinFixedPercentages(count);
     console.log(
-      `Generating ${totalLessonRosters} lesson rosters for course ${course.name}...`
+      `Generating ${totalLessonRosters} lesson rosters for subject ${subject.name}...`
     );
 
     for (let i = 0; i < totalLessonRosters; i += batch) {
@@ -44,11 +46,11 @@ export async function lessonRostersTableSeeder(
         const actualIndex = i + index;
         const lecturer = faker.helpers.arrayElement(users);
         return {
-          courseId: course.id,
+          subjectId: subject.id,
           lecturerId: lecturer.id,
-          effectiveCoursePrice: course.price,
+          effectiveSubjectPrice: subject.price,
           slug: slugify(
-            `${course.name} ${faker.lorem.slug()} ${faker.date.past()}`
+            `${subject.name} ${faker.lorem.slug()} ${faker.date.past()}`
           ),
           notes: customFields.notes?.(actualIndex) || faker.lorem.sentence(),
         };
@@ -57,7 +59,7 @@ export async function lessonRostersTableSeeder(
       console.log(
         `Inserting batch ${i / batch + 1} (${
           lessonRosters.length
-        } lesson rosters for course ${course.name})...`
+        } lesson rosters for subject ${subject.name})...`
       );
       await db.insert(lessonRostersTable).values(lessonRosters);
     }

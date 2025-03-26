@@ -1,6 +1,6 @@
 import { attendanceTableSeeder } from "./tables/attendance-table-seeder";
 import { auditLogsTableSeeder } from "./tables/audit-logs-table-seeder";
-import { coursesTableSeeder } from "./tables/course-seeder-options";
+import { subjectsTableSeeder } from "./tables/subjects-table-seeder";
 import { departmentsTableSeeder } from "./tables/departments-table-seeder";
 import { fieldsTableSeeder } from "./tables/fields-table-seeder";
 import { guardianDependantsSeeder } from "./tables/guardian-dependant";
@@ -20,7 +20,7 @@ export interface SeedOptions {
   roles?: number;
   departments?: number;
   userToDepartments?: number;
-  courses?: number;
+  subjects?: number;
   fields?: number;
   lessonrosters?: number;
   sessions?: number;
@@ -39,7 +39,7 @@ async function seed(options: SeedOptions = {}) {
     roles = 0,
     departments = 0,
     userToDepartments = 0,
-    courses = 0,
+    subjects = 0,
     fields = 0,
     lessonrosters = 0,
     sessions = 0,
@@ -81,9 +81,9 @@ async function seed(options: SeedOptions = {}) {
     await departmentsTableSeeder(departments, { batch });
   }
 
-  if (courses > 0) {
-    console.log(`\n--- Seeding ${courses} courses ---`);
-    await coursesTableSeeder(courses, { batch });
+  if (subjects > 0) {
+    console.log(`\n--- Seeding ${subjects} subjects ---`);
+    await subjectsTableSeeder(subjects, { batch });
   }
 
   if (userToDepartments > 0) {
@@ -137,7 +137,7 @@ const permissions = 100;
 const roles = 10;
 const departments = 50;
 const userToDepartments = 100000;
-const courses = 1000;
+const subjects = 1000;
 const fields = 10;
 const lessonrosters = 40;
 const sessions = 30;
@@ -154,7 +154,7 @@ async function main() {
     roles,
     departments,
     userToDepartments,
-    courses,
+    subjects,
     fields,
     lessonrosters,
     sessions,

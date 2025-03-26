@@ -1,5 +1,5 @@
 import db from "@/db";
-import { coursesTable, fields } from "@/db/schema";
+import { subjectsTable, fields } from "@/db/schema";
 import { faker } from "@faker-js/faker";
 import { eq } from "drizzle-orm";
 
@@ -16,10 +16,10 @@ export async function fieldsTableSeeder(
   await db.delete(fields);
   console.log(`Seeding ${count} fields in batches of ${batch}...`);
 
-  // Get all courses
-  const courses = await db.select().from(coursesTable);
-  if (courses.length === 0) {
-    console.error("No courses found. Please seed courses first.");
+  // Get all subjects
+  const subjects = await db.select().from(subjectsTable);
+  if (subjects.length === 0) {
+    console.error("No subjects found. Please seed subjects first.");
     return;
   }
 
@@ -42,38 +42,38 @@ export async function fieldsTableSeeder(
     "Attendance",
   ];
 
-  // Distribute count across courses with ±5% variance
+  // Distribute count across subjects with ±5% variance
   let totalSeeded = 0;
-  const courseFieldCounts = courses.map((course) => {
-    const baseCount = Math.round(count / courses.length);
+  const subjectFieldCounts = subjects.map((subject) => {
+    const baseCount = Math.round(count / subjects.length);
     const variation = Math.max(1, Math.round(baseCount * 0.05)); // At least 1
     const finalCount = faker.number.int({
       min: Math.max(1, baseCount - variation),
       max: baseCount + variation,
     });
     totalSeeded += finalCount;
-    return { course, finalCount };
+    return { subject, finalCount };
   });
 
   console.log(`Total fields to be seeded (after ±5% variance): ${totalSeeded}`);
 
-  for (const { course, finalCount } of courseFieldCounts) {
+  for (const { subject, finalCount } of subjectFieldCounts) {
     for (let i = 0; i < finalCount; i += batch) {
       const batchSize = Math.min(batch, finalCount - i);
       const fieldData = Array.from({ length: batchSize }, () => ({
-        courseId: course.id,
+        subjectId: subject.id,
         passRate: faker.number.int({ min: 50, max: 100 }).toString(),
         name: faker.helpers.arrayElement(fieldNames),
       }));
 
       console.log(
-        `Inserting ${batchSize} fields for course ${course.id} (Total for course: ${finalCount})...`
+        `Inserting ${batchSize} fields for subject ${subject.id} (Total for subject: ${finalCount})...`
       );
-      //update lastFieldAddedAt for course
+      //update lastFieldAddedAt for subject
       await db
-        .update(coursesTable)
+        .update(subjectsTable)
         .set({ lastFieldAddedAt: new Date() })
-        .where(eq(coursesTable.id, course.id));
+        .where(eq(subjectsTable.id, subject.id));
       await db.insert(fields).values(fieldData);
     }
   }

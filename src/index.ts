@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import auth from "./routes/auth";
 import auditLogs from "./routes/audit-logs";
 import classes from "./routes/classes";
-import courses from "./routes/courses";
+import subjects from "./routes/subjects";
 import departments from "./routes/departments";
 import lessonRosters from "./routes/lesson-rosters";
 import personal from "./routes/personal";
@@ -21,19 +21,19 @@ app
   .route("/auth", auth)
   .route("/audit-logs", auditLogs)
   .route("/classes", classes)
-  .route("/courses", courses)
+  .route("/subjects", subjects)
   .route("/departments", departments)
   .route("/lesson-rosters", lessonRosters)
   .route("/personal", personal)
   .route("/users", users)
   .get("/test", async (c) => {
-    const course = await db.query.coursesTable.findFirst({
+    const subject = await db.query.subjectsTable.findFirst({
       with: {
         fields: true,
       },
     });
 
-    return c.json({ course });
+    return c.json({ subject });
   });
 
 export default {

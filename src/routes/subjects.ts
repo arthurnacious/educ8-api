@@ -3,27 +3,27 @@ import { JwtVariables } from "hono/jwt";
 import { authMiddleware } from "../middleware/auth";
 import db from "@/db";
 import { z } from "zod";
-import { coursesTable } from "@/db/schema";
+import { subjectsTable } from "@/db/schema";
 import { inArray } from "drizzle-orm";
 
-const courses = new Hono<{ Variables: JwtVariables }>();
-// courses.use("*", authMiddleware);
+const subjects = new Hono<{ Variables: JwtVariables }>();
+// subjects.use("*", authMiddleware);
 
-const deleteCoursesIds = z.object({
+const deleteSubjectsIds = z.object({
   idsArray: z.array(z.string()),
 });
 
-courses
+subjects
   .get("/", async (ctx) => {
-    const data = await db.query.coursesTable.findMany();
+    const data = await db.query.subjectsTable.findMany();
 
     return ctx.json({ data });
   })
   .get("/:slug", async (ctx) => {
     const { slug } = ctx.req.param();
 
-    const data = await db.query.coursesTable.findFirst({
-      where: (course, { eq }) => eq(course.slug, slug),
+    const data = await db.query.subjectsTable.findFirst({
+      where: (subject, { eq }) => eq(subject.slug, slug),
       with: {
         fields: true,
       },
@@ -34,7 +34,7 @@ courses
   .patch("/multi-delete", async (ctx) => {
     try {
       const body = await ctx.req.json();
-      const validatedData = deleteCoursesIds.safeParse(body);
+      const validatedData = deleteSubjectsIds.safeParse(body);
 
       if (!validatedData.success) {
         return ctx.json({ error: validatedData.error.format() }, 400);
@@ -43,14 +43,14 @@ courses
       const { idsArray } = validatedData.data;
 
       const data = await db
-        .delete(coursesTable)
-        .where(inArray(coursesTable.id, idsArray));
+        .delete(subjectsTable)
+        .where(inArray(subjectsTable.id, idsArray));
 
       return ctx.json({ data }, 200);
     } catch (error) {
-      console.error("Error deleting courses:", error);
+      console.error("Error deleting subjects:", error);
       return ctx.json({ error: "Internal Server Error" }, 500);
     }
   });
 
-export default courses;
+export default subjects;

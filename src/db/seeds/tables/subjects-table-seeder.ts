@@ -1,20 +1,20 @@
 import { faker } from "@faker-js/faker";
 import db from "@/db";
-import { coursesTable, departmentsTable } from "@/db/schema";
+import { subjectsTable, departmentsTable } from "@/db/schema";
 import { slugify } from "@/utils";
 
-interface CourseSeederOptions {
+interface SubjectSeederOptions {
   batch?: number;
   customFields?: Record<string, (index: number) => any>;
 }
 
-export async function coursesTableSeeder(
+export async function subjectsTableSeeder(
   count: number,
-  options: CourseSeederOptions = {}
+  options: SubjectSeederOptions = {}
 ) {
   const { batch = 100, customFields = {} } = options;
-  await db.delete(coursesTable);
-  console.log(`Seeding ${count} courses in batches of ${batch}...`);
+  await db.delete(subjectsTable);
+  console.log(`Seeding ${count} subjects in batches of ${batch}...`);
 
   // Get all departments
   const departments = await db.select().from(departmentsTable);
@@ -24,8 +24,8 @@ export async function coursesTableSeeder(
     return;
   }
 
-  // Sample course names
-  const courseNames = [
+  // Sample subject names
+  const subjectNames = [
     "Introduction to",
     "Advanced",
     "Principles of",
@@ -38,7 +38,7 @@ export async function coursesTableSeeder(
     "Analysis of",
   ];
 
-  const courseSubjects = [
+  const subjectSubjects = [
     "Algebra",
     "Calculus",
     "Statistics",
@@ -64,16 +64,16 @@ export async function coursesTableSeeder(
 
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);
-    const courseData = Array.from({ length: batchSize }, (_, index) => {
+    const subjectData = Array.from({ length: batchSize }, (_, index) => {
       const actualIndex = i + index;
 
-      // Generate a course name or use custom
+      // Generate a subject name or use custom
       let name = customFields.name?.(actualIndex);
       if (!name) {
         const prefix =
-          courseNames[Math.floor(Math.random() * courseNames.length)];
+          subjectNames[Math.floor(Math.random() * subjectNames.length)];
         const subject =
-          courseSubjects[Math.floor(Math.random() * courseSubjects.length)];
+          subjectSubjects[Math.floor(Math.random() * subjectSubjects.length)];
         name = `${prefix} ${subject}`;
       }
 
@@ -108,11 +108,11 @@ export async function coursesTableSeeder(
     });
 
     console.log(
-      `Inserting batch ${i / batch + 1} (${courseData.length} courses)...`
+      `Inserting batch ${i / batch + 1} (${subjectData.length} subjects)...`
     );
-    await db.insert(coursesTable).values(courseData);
+    await db.insert(subjectsTable).values(subjectData);
   }
 
-  console.log(`Successfully seeded ${count} courses.`);
-  return await db.select().from(coursesTable);
+  console.log(`Successfully seeded ${count} subjects.`);
+  return await db.select().from(subjectsTable);
 }

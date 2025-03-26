@@ -87,7 +87,7 @@ export const departmentsTable = pgTable("departments", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export const coursesTable = pgTable("courses", {
+export const subjectsTable = pgTable("subjects", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -104,7 +104,7 @@ export const coursesTable = pgTable("courses", {
   }),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
   description: text("description"),
-  lastFieldAddedAt: timestamp("lastFieldAddedAt"), //to prevent adding fields while the course runs.
+  lastFieldAddedAt: timestamp("lastFieldAddedAt"), //to prevent adding fields while the subject runs.
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
@@ -116,9 +116,9 @@ export const fields = pgTable("field", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  courseId: uuid("courseId")
+  subjectId: uuid("subjectId")
     .notNull()
-    .references(() => coursesTable.id, {
+    .references(() => subjectsTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
@@ -130,9 +130,9 @@ export const lessonRostersTable = pgTable("lessonRosters", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  courseId: uuid("courseId")
+  subjectId: uuid("subjectId")
     .notNull()
-    .references(() => coursesTable.id, {
+    .references(() => subjectsTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
@@ -143,7 +143,7 @@ export const lessonRostersTable = pgTable("lessonRosters", {
       onUpdate: "cascade",
     }),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
-  effectiveCoursePrice: numeric("effectiveCoursePrice", {
+  effectivesubjectPrice: numeric("effectivesubjectPrice", {
     precision: 10,
     scale: 2,
   }),
@@ -430,34 +430,34 @@ export const auditLogsRelations = relations(auditLogsTable, ({ one }) => ({
 
 // Departments Relationships
 export const departmentsRelations = relations(departmentsTable, ({ many }) => ({
-  // Courses in this department
-  courses: many(coursesTable),
+  // subjects in this department
+  subjects: many(subjectsTable),
 
   // Users affiliated with this department (via join table)
   members: many(userToDepartmentsTable),
 }));
 
-// Courses Relationships
-export const coursesRelations = relations(coursesTable, ({ one, many }) => ({
-  // Department the course belongs to
+// subjects Relationships
+export const subjectsRelations = relations(subjectsTable, ({ one, many }) => ({
+  // Department the subject belongs to
   department: one(departmentsTable, {
-    fields: [coursesTable.departmentId],
+    fields: [subjectsTable.departmentId],
     references: [departmentsTable.id],
   }),
 
-  // Fields (subjects) in the course
+  // Fields (subjects) in the subject
   fields: many(fields),
 
-  // Lesson rosters for the course
+  // Lesson rosters for the subject
   lessonRosters: many(lessonRostersTable),
 }));
 
 // Fields Relationships
 export const fieldsRelations = relations(fields, ({ one, many }) => ({
-  // Course this field belongs to
-  course: one(coursesTable, {
-    fields: [fields.courseId],
-    references: [coursesTable.id],
+  // subject this field belongs to
+  subject: one(subjectsTable, {
+    fields: [fields.subjectId],
+    references: [subjectsTable.id],
   }),
 }));
 
@@ -465,10 +465,10 @@ export const fieldsRelations = relations(fields, ({ one, many }) => ({
 export const lessonRostersRelations = relations(
   lessonRostersTable,
   ({ one, many }) => ({
-    // Course this lesson roster belongs to
-    course: one(coursesTable, {
-      fields: [lessonRostersTable.courseId],
-      references: [coursesTable.id],
+    // subject this lesson roster belongs to
+    subject: one(subjectsTable, {
+      fields: [lessonRostersTable.subjectId],
+      references: [subjectsTable.id],
     }),
 
     // Creator (teacher/instructor) of this lesson roster

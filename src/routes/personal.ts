@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { JwtVariables } from "hono/jwt";
 import { authMiddleware } from "../middleware/auth";
 import {
-  coursesTable,
+  subjectsTable,
   departmentRolesTable,
   departmentsTable,
   enrollmentsTable,
@@ -30,7 +30,7 @@ personal.get("/classes", authMiddleware, async (ctx) => {
 
   // Note: The original code has 'enrolledClasses' in the response but it's not defined
   // in the provided code. You may need to implement this function separately.
-  const enrolledClasses = await getEnrolledCourses(userId); // Placeholder for missing data
+  const enrolledClasses = await getEnrolledSubjects(userId); // Placeholder for missing data
 
   const departmentClasses = await getDepartmentClasses(userId);
 
@@ -45,11 +45,11 @@ personal.get("/classes", authMiddleware, async (ctx) => {
 
 export default personal;
 
-async function getEnrolledCourses(userId: string) {
+async function getEnrolledSubjects(userId: string) {
   const enrolledClasses = await db
     .select({
       id: lessonRostersTable.id,
-      courseName: coursesTable.name,
+      subjectName: subjectsTable.name,
       departmentName: departmentsTable.name,
       lecturer: {
         name: usersTable.name,
@@ -63,12 +63,12 @@ async function getEnrolledCourses(userId: string) {
       eq(enrollmentsTable.lessonRosterId, lessonRostersTable.id)
     )
     .innerJoin(
-      coursesTable,
-      eq(lessonRostersTable.courseId, coursesTable.id) // Join to get course name
+      subjectsTable,
+      eq(lessonRostersTable.subjectId, subjectsTable.id) // Join to get subject name
     )
     .innerJoin(
       departmentsTable,
-      eq(coursesTable.departmentId, departmentsTable.id) // Join to get department name
+      eq(subjectsTable.departmentId, departmentsTable.id) // Join to get department name
     )
     .innerJoin(
       usersTable,
@@ -84,15 +84,18 @@ async function getPresentedClasses(userId: string) {
   const presentedClasses = await db
     .select({
       id: lessonRostersTable.id,
-      courseName: coursesTable.name,
+      subjectName: subjectsTable.name,
       departmentName: departmentsTable.name, // Get department name
       createdAt: lessonRostersTable.createdAt,
     })
     .from(lessonRostersTable)
-    .innerJoin(coursesTable, eq(lessonRostersTable.courseId, coursesTable.id))
+    .innerJoin(
+      subjectsTable,
+      eq(lessonRostersTable.subjectId, subjectsTable.id)
+    )
     .innerJoin(
       departmentsTable,
-      eq(coursesTable.departmentId, departmentsTable.id)
+      eq(subjectsTable.departmentId, departmentsTable.id)
     ) // Join departmentsTable on departmentId
     .where(eq(lessonRostersTable.lecturerId, userId));
 
@@ -104,7 +107,7 @@ async function getDepartmentClasses(userId: string) {
   const departmentClasses = await db
     .select({
       id: lessonRostersTable.id,
-      courseName: coursesTable.name,
+      subjectName: subjectsTable.name,
       departmentName: departmentsTable.name,
       lecturer: {
         name: usersTable.name,
@@ -121,10 +124,13 @@ async function getDepartmentClasses(userId: string) {
       departmentRolesTable,
       eq(userToDepartmentsTable.departmentRoleId, departmentRolesTable.id)
     )
-    .innerJoin(coursesTable, eq(coursesTable.departmentId, departmentsTable.id))
+    .innerJoin(
+      subjectsTable,
+      eq(subjectsTable.departmentId, departmentsTable.id)
+    )
     .innerJoin(
       lessonRostersTable,
-      eq(lessonRostersTable.courseId, coursesTable.id)
+      eq(lessonRostersTable.subjectId, subjectsTable.id)
     )
     .innerJoin(usersTable, eq(lessonRostersTable.lecturerId, usersTable.id))
     .where(
