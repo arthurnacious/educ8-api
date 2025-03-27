@@ -35,11 +35,11 @@ export enum userPrivilege {
   UPDATE_SUBJECTS = "can_update_subjects",
   DELETE_SUBJECTS = "can_delete_subjects",
 
-  // Lesson Rosters
-  CREATE_LESSON_ROSTERS = "can_create_lesson_rosters",
-  READ_LESSON_ROSTERS = "can_read_lesson_rosters",
-  UPDATE_LESSON_ROSTERS = "can_update_lesson_rosters",
-  DELETE_LESSON_ROSTERS = "can_delete_lesson_rosters",
+  // courses
+  CREATE_courses = "can_create_courses",
+  READ_courses = "can_read_courses",
+  UPDATE_courses = "can_update_courses",
+  DELETE_courses = "can_delete_courses",
 
   // Sessions (Every lesson or a subject)
   CREATE_SESSIONS = "can_create_sessions",

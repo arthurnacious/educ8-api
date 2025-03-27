@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { JwtVariables } from "hono/jwt";
 import { authMiddleware } from "../middleware/auth";
 import db from "@/db";
-import { enrollmentsTable, lessonRostersTable, marksTable } from "@/db/schema";
+import { enrollmentsTable, coursesTable, marksTable } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
@@ -17,7 +17,7 @@ classes
   .get("/:id", async (ctx) => {
     const { id } = ctx.req.param();
 
-    const data = await db.query.lessonRostersTable.findFirst({
+    const data = await db.query.coursesTable.findFirst({
       where: (classData, { eq }) => eq(classData.id, id),
       with: {
         enrollments: {
@@ -30,11 +30,11 @@ classes
               with: {
                 payments: {
                   where: (payments, { eq }) =>
-                    eq(payments.classId, lessonRostersTable.id),
+                    eq(payments.classId, coursesTable.id),
                 },
                 attendance: {
                   where: (attendance, { eq }) =>
-                    eq(attendance.periodId, lessonRostersTable.id),
+                    eq(attendance.periodId, coursesTable.id),
                 },
               },
             },
@@ -65,7 +65,7 @@ classes
         .where(
           and(
             inArray(enrollmentsTable.studentId, validatedData.studentIds),
-            eq(enrollmentsTable.lessonRosterId, classId)
+            eq(enrollmentsTable.courseId, classId)
           )
         )
         .returning();
@@ -75,7 +75,7 @@ classes
         .where(
           and(
             inArray(marksTable.studentId, validatedData.studentIds),
-            eq(marksTable.lessonRosterId, classId)
+            eq(marksTable.courseId, classId)
           )
         )
         .returning();

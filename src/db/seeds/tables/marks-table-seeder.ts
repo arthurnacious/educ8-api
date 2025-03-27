@@ -16,8 +16,8 @@ export async function marksTableSeeder(
   await db.delete(marksTable);
   console.log(`Seeding ${count} marks in batches of ${batch}...`);
 
-  // Fetch lesson rosters with fields
-  const lessonRosters = await db.query.lessonRostersTable.findMany({
+  // Fetch courses with fields
+  const courses = await db.query.coursesTable.findMany({
     columns: { id: true },
     with: {
       subject: {
@@ -31,29 +31,27 @@ export async function marksTableSeeder(
 
   // Fetch students once
   const students = await db.select().from(usersTable).limit(20);
-  if (!lessonRosters.length || !students.length) {
+  if (!courses.length || !students.length) {
     console.error(
       "Error: Ensure fields and users are seeded before seeding marks."
     );
-    throw new Error("Missing required lesson rosters or students.");
+    throw new Error("Missing required courses or students.");
   }
 
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);
     const marksData: any[] = [];
 
-    for (const lessonRoster of lessonRosters) {
-      if (!lessonRoster.subject?.fields?.length) {
-        console.warn(
-          `Skipping lessonRosterId ${lessonRoster.id} due to missing fields.`
-        );
+    for (const course of courses) {
+      if (!course.subject?.fields?.length) {
+        console.warn(`Skipping courseId ${course.id} due to missing fields.`);
         continue;
       }
 
-      for (const field of lessonRoster.subject.fields) {
+      for (const field of course.subject.fields) {
         for (const student of students.slice(0, batchSize)) {
           marksData.push({
-            lessonRosterId: lessonRoster.id,
+            courseId: course.id,
             name: field.name,
             passRate: field.passRate,
             studentId: student.id,

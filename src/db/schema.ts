@@ -126,7 +126,7 @@ export const fields = pgTable("field", {
   name: varchar("name", { length: 255 }).notNull(),
 });
 
-export const lessonRostersTable = pgTable("lessonRosters", {
+export const coursesTable = pgTable("courses", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -166,7 +166,7 @@ export const paymentsTable = pgTable("payments", {
     }),
   classId: uuid("classId")
     .notNull()
-    .references(() => lessonRostersTable.id, {
+    .references(() => coursesTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
@@ -182,9 +182,9 @@ export const marksTable = pgTable("marks", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  lessonRosterId: uuid("lessonRosterId")
+  courseId: uuid("courseId")
     .notNull()
-    .references(() => lessonRostersTable.id, {
+    .references(() => coursesTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
@@ -203,9 +203,9 @@ export const sessionsTable = pgTable("sessions", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  lessonRosterId: uuid("lessonRosterId")
+  courseId: uuid("courseId")
     .notNull()
-    .references(() => lessonRostersTable.id, {
+    .references(() => coursesTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
@@ -268,15 +268,15 @@ export const enrollmentsTable = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    lessonRosterId: uuid("classId")
+    courseId: uuid("classId")
       .notNull()
-      .references(() => lessonRostersTable.id, {
+      .references(() => coursesTable.id, {
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
   },
-  ({ studentId, lessonRosterId }) => {
-    return [primaryKey({ columns: [studentId, lessonRosterId] })];
+  ({ studentId, courseId }) => {
+    return [primaryKey({ columns: [studentId, courseId] })];
   }
 );
 
@@ -388,14 +388,14 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
 
   // Classes the user is enrolled in (as a student)
-  enrolledClasses: many(enrollmentsTable),
+  enrollments: many(enrollmentsTable),
 
   // User's marks/grades
   marks: many(marksTable, { relationName: "studentMarks" }),
 
   // Classes created by this user (as a teacher/instructor)
-  createdLessonRosters: many(lessonRostersTable, {
-    relationName: "lessonCreator",
+  courses: many(coursesTable, {
+    relationName: "presentingCourses",
   }),
 
   // Attendance records (as a student)
@@ -448,8 +448,8 @@ export const subjectsRelations = relations(subjectsTable, ({ one, many }) => ({
   // Fields (subjects) in the subject
   fields: many(fields),
 
-  // Lesson rosters for the subject
-  lessonRosters: many(lessonRostersTable),
+  // courses for the subject
+  courses: many(coursesTable),
 }));
 
 // Fields Relationships
@@ -461,35 +461,32 @@ export const fieldsRelations = relations(fields, ({ one, many }) => ({
   }),
 }));
 
-// Lesson Rosters Relationships
-export const lessonRostersRelations = relations(
-  lessonRostersTable,
-  ({ one, many }) => ({
-    // subject this lesson roster belongs to
-    subject: one(subjectsTable, {
-      fields: [lessonRostersTable.subjectId],
-      references: [subjectsTable.id],
-    }),
+// courses Relationships
+export const coursesRelations = relations(coursesTable, ({ one, many }) => ({
+  // subject this course belongs to
+  subject: one(subjectsTable, {
+    fields: [coursesTable.subjectId],
+    references: [subjectsTable.id],
+  }),
 
-    // Creator (teacher/instructor) of this lesson roster
-    creator: one(usersTable, {
-      fields: [lessonRostersTable.lecturerId],
-      references: [usersTable.id],
-    }),
+  // Creator (teacher/instructor) of this course
+  creator: one(usersTable, {
+    fields: [coursesTable.lecturerId],
+    references: [usersTable.id],
+  }),
 
-    // Sessions/periods in this lesson roster
-    sessions: many(sessionsTable),
+  // Sessions/periods in this course
+  sessions: many(sessionsTable),
 
-    // Students enrolled in this lesson roster (join table)
-    enrollments: many(enrollmentsTable),
+  // Students enrolled in this course (join table)
+  enrollments: many(enrollmentsTable),
 
-    // Payments for this lesson roster
-    payments: many(paymentsTable),
+  // Payments for this course
+  payments: many(paymentsTable),
 
-    // Marks in this lesson roster
-    marks: many(marksTable),
-  })
-);
+  // Marks in this course
+  marks: many(marksTable),
+}));
 
 // Roles Relationships
 export const rolesTableRelations = relations(rolesTable, ({ many }) => ({
@@ -505,9 +502,9 @@ export const rolesTableRelations = relations(rolesTable, ({ many }) => ({
 // Marks Relationships
 export const marksTableRelations = relations(marksTable, ({ one }) => ({
   // Field associated with this mark
-  class: one(lessonRostersTable, {
-    fields: [marksTable.lessonRosterId],
-    references: [lessonRostersTable.id],
+  class: one(coursesTable, {
+    fields: [marksTable.courseId],
+    references: [coursesTable.id],
   }),
 
   // Student who received this mark
@@ -520,10 +517,10 @@ export const marksTableRelations = relations(marksTable, ({ one }) => ({
 
 // Sessions Relationships
 export const sessionsRelations = relations(sessionsTable, ({ one, many }) => ({
-  // Lesson roster this session belongs to
-  lessonRoster: one(lessonRostersTable, {
-    fields: [sessionsTable.lessonRosterId],
-    references: [lessonRostersTable.id],
+  // course this session belongs to
+  course: one(coursesTable, {
+    fields: [sessionsTable.courseId],
+    references: [coursesTable.id],
   }),
 
   // Attendance records for this session
@@ -546,7 +543,7 @@ export const attendanceRelations = relations(attendanceTable, ({ one }) => ({
   }),
 }));
 
-// Students To Lesson Rosters (Join Table) Relationships
+// Students To courses (Join Table) Relationships
 export const enrollmentsTableRelations = relations(
   enrollmentsTable,
   ({ one }) => ({
@@ -556,10 +553,10 @@ export const enrollmentsTableRelations = relations(
       references: [usersTable.id],
     }),
 
-    // Lesson roster the student is enrolled in
-    lessonRoster: one(lessonRostersTable, {
-      fields: [enrollmentsTable.lessonRosterId],
-      references: [lessonRostersTable.id],
+    // course the student is enrolled in
+    course: one(coursesTable, {
+      fields: [enrollmentsTable.courseId],
+      references: [coursesTable.id],
     }),
   })
 );
@@ -655,8 +652,8 @@ export const paymentsRelations = relations(paymentsTable, ({ one }) => ({
   }),
 
   // class this payment belongs to
-  class: one(lessonRostersTable, {
+  class: one(coursesTable, {
     fields: [paymentsTable.classId],
-    references: [lessonRostersTable.id],
+    references: [coursesTable.id],
   }),
 }));

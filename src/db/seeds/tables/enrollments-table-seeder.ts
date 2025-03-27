@@ -1,5 +1,5 @@
 import db from "@/db";
-import { lessonRostersTable, enrollmentsTable, usersTable } from "@/db/schema";
+import { coursesTable, enrollmentsTable, usersTable } from "@/db/schema";
 import { faker } from "@faker-js/faker";
 
 interface SeederOptions {
@@ -14,14 +14,14 @@ export async function enrollmentsTableSeeder(
   const { batch = 100, customFields = {} } = options;
   await db.delete(enrollmentsTable);
   console.log(
-    `Seeding ${count} student-lesson roster associations in batches of ${batch}...`
+    `Seeding ${count} enrollments course associations in batches of ${batch}...`
   );
 
-  const lessonRosters = await db.select().from(lessonRostersTable);
+  const courses = await db.select().from(coursesTable);
   const users = await db.select().from(usersTable);
 
-  if (lessonRosters.length === 0) {
-    console.error("No lesson rosters found. Please seed lesson rosters first.");
+  if (courses.length === 0) {
+    console.error("No courses found. Please seed courses first.");
     return;
   }
 
@@ -30,7 +30,7 @@ export async function enrollmentsTableSeeder(
     return;
   }
 
-  const lessonRosterIds = lessonRosters.map((lessonRoster) => lessonRoster.id);
+  const courseIds = courses.map((course) => course.id);
   const userIds = users.map((user) => user.id);
 
   // Set to track unique combinations
@@ -40,8 +40,8 @@ export async function enrollmentsTableSeeder(
   // Generate unique combinations
   while (generatedAssociations.length < count) {
     const studentId = faker.helpers.arrayElement(userIds);
-    const lessonRosterId = faker.helpers.arrayElement(lessonRosterIds);
-    const combinationKey = `${studentId}-${lessonRosterId}`;
+    const courseId = faker.helpers.arrayElement(courseIds);
+    const combinationKey = `${studentId}-${courseId}`;
 
     // Skip if this combination already exists
     if (usedCombinations.has(combinationKey)) {
@@ -54,11 +54,11 @@ export async function enrollmentsTableSeeder(
     // Create the association
     generatedAssociations.push({
       studentId,
-      lessonRosterId,
+      courseId,
     });
 
     // If we've reached the maximum possible combinations, break
-    if (usedCombinations.size === userIds.length * lessonRosterIds.length) {
+    if (usedCombinations.size === userIds.length * courseIds.length) {
       console.log(
         `Maximum possible combinations reached: ${usedCombinations.size}`
       );
@@ -78,6 +78,6 @@ export async function enrollmentsTableSeeder(
   }
 
   console.log(
-    `Successfully seeded ${generatedAssociations.length} student-lesson roster associations.`
+    `Successfully seeded ${generatedAssociations.length} enrollments.`
   );
 }

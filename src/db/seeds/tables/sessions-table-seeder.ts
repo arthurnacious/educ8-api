@@ -1,4 +1,4 @@
-import { lessonRostersTable, sessionsTable } from "@/db/schema";
+import { coursesTable, sessionsTable } from "@/db/schema";
 import db from "@/db";
 import { faker } from "@faker-js/faker";
 
@@ -15,15 +15,15 @@ export async function sessionsTableSeeder(
   await db.delete(sessionsTable);
   console.log(`Seeding ${count} sessions in batches of ${batch}...`);
 
-  const lessonRosters = await db.select().from(lessonRostersTable);
+  const curses = await db.select().from(coursesTable);
 
-  const lessonRosterIds = lessonRosters.map((lessonRoster) => lessonRoster.id);
+  const courseIds = curses.map((course) => course.id);
 
   for (let i = 0; i < count; i += batch) {
     const batchSize = Math.min(batch, count - i);
     const sessionData = Array.from({ length: batchSize }, (_, index) => {
       return {
-        lessonRosterId: faker.helpers.arrayElement(lessonRosterIds),
+        courseId: faker.helpers.arrayElement(courseIds),
         name: customFields.name?.(index) || faker.lorem.words(3),
       };
     });

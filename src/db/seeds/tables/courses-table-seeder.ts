@@ -1,4 +1,4 @@
-import { lessonRostersTable, subjectsTable, usersTable } from "@/db/schema";
+import { coursesTable, subjectsTable, usersTable } from "@/db/schema";
 import db from "@/db";
 import { faker } from "@faker-js/faker";
 import { slugify } from "@/utils";
@@ -15,34 +15,32 @@ function getRandomWithinFixedPercentages(base: number): number {
   return Math.round(base * (1 + randomPercentage / 100));
 }
 
-export async function lessonRostersTableSeeder(
+export async function coursesTableSeeder(
   count: number,
   options: SeederOptions = {}
 ) {
   const { batch = 50, customFields = {} } = options;
-  await db.delete(lessonRostersTable);
-  console.log(`Seeding lesson rosters in batches of ${batch}...`);
+  await db.delete(coursesTable);
+  console.log(`Seeding courses in batches of ${batch}...`);
 
   const subjects = await db.select().from(subjectsTable);
   const users = await db.select().from(usersTable);
   if (subjects.length === 0) {
-    throw new Error(
-      "Ensure subjects are seeded before seeding lesson rosters."
-    );
+    throw new Error("Ensure subjects are seeded before seeding courses.");
   }
   if (users.length === 0) {
-    throw new Error("Ensure users are seeded before seeding lesson rosters.");
+    throw new Error("Ensure users are seeded before seeding courses.");
   }
 
   for (const subject of subjects) {
-    const totalLessonRosters = getRandomWithinFixedPercentages(count);
+    const totalCourses = getRandomWithinFixedPercentages(count);
     console.log(
-      `Generating ${totalLessonRosters} lesson rosters for subject ${subject.name}...`
+      `Generating ${totalCourses} courses for subject ${subject.name}...`
     );
 
-    for (let i = 0; i < totalLessonRosters; i += batch) {
-      const batchSize = Math.min(batch, totalLessonRosters - i);
-      const lessonRosters = Array.from({ length: batchSize }, (_, index) => {
+    for (let i = 0; i < totalCourses; i += batch) {
+      const batchSize = Math.min(batch, totalCourses - i);
+      const Courses = Array.from({ length: batchSize }, (_, index) => {
         const actualIndex = i + index;
         const lecturer = faker.helpers.arrayElement(users);
         return {
@@ -58,13 +56,13 @@ export async function lessonRostersTableSeeder(
 
       console.log(
         `Inserting batch ${i / batch + 1} (${
-          lessonRosters.length
-        } lesson rosters for subject ${subject.name})...`
+          Courses.length
+        } courses for subject ${subject.name})...`
       );
-      await db.insert(lessonRostersTable).values(lessonRosters);
+      await db.insert(coursesTable).values(Courses);
     }
   }
 
-  console.log(`Successfully seeded lesson rosters.`);
-  return await db.select().from(lessonRostersTable);
+  console.log(`Successfully seeded courses.`);
+  return await db.select().from(coursesTable);
 }

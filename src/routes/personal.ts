@@ -6,7 +6,7 @@ import {
   departmentRolesTable,
   departmentsTable,
   enrollmentsTable,
-  lessonRostersTable,
+  coursesTable,
   usersTable,
   userToDepartmentsTable,
 } from "@/db/schema";
@@ -48,23 +48,20 @@ export default personal;
 async function getEnrolledSubjects(userId: string) {
   const enrolledClasses = await db
     .select({
-      id: lessonRostersTable.id,
+      id: coursesTable.id,
       subjectName: subjectsTable.name,
       departmentName: departmentsTable.name,
       lecturer: {
         name: usersTable.name,
         image: usersTable.image,
       },
-      createdAt: lessonRostersTable.createdAt,
+      createdAt: coursesTable.createdAt,
     })
     .from(enrollmentsTable)
-    .innerJoin(
-      lessonRostersTable,
-      eq(enrollmentsTable.lessonRosterId, lessonRostersTable.id)
-    )
+    .innerJoin(coursesTable, eq(enrollmentsTable.courseId, coursesTable.id))
     .innerJoin(
       subjectsTable,
-      eq(lessonRostersTable.subjectId, subjectsTable.id) // Join to get subject name
+      eq(coursesTable.subjectId, subjectsTable.id) // Join to get subject name
     )
     .innerJoin(
       departmentsTable,
@@ -72,7 +69,7 @@ async function getEnrolledSubjects(userId: string) {
     )
     .innerJoin(
       usersTable,
-      eq(lessonRostersTable.lecturerId, usersTable.id) // Join to get department name
+      eq(coursesTable.lecturerId, usersTable.id) // Join to get department name
     )
     .where(eq(enrollmentsTable.studentId, userId));
 
@@ -83,21 +80,18 @@ async function getEnrolledSubjects(userId: string) {
 async function getPresentedClasses(userId: string) {
   const presentedClasses = await db
     .select({
-      id: lessonRostersTable.id,
+      id: coursesTable.id,
       subjectName: subjectsTable.name,
       departmentName: departmentsTable.name, // Get department name
-      createdAt: lessonRostersTable.createdAt,
+      createdAt: coursesTable.createdAt,
     })
-    .from(lessonRostersTable)
-    .innerJoin(
-      subjectsTable,
-      eq(lessonRostersTable.subjectId, subjectsTable.id)
-    )
+    .from(coursesTable)
+    .innerJoin(subjectsTable, eq(coursesTable.subjectId, subjectsTable.id))
     .innerJoin(
       departmentsTable,
       eq(subjectsTable.departmentId, departmentsTable.id)
     ) // Join departmentsTable on departmentId
-    .where(eq(lessonRostersTable.lecturerId, userId));
+    .where(eq(coursesTable.lecturerId, userId));
 
   return presentedClasses;
 }
@@ -106,14 +100,14 @@ async function getPresentedClasses(userId: string) {
 async function getDepartmentClasses(userId: string) {
   const departmentClasses = await db
     .select({
-      id: lessonRostersTable.id,
+      id: coursesTable.id,
       subjectName: subjectsTable.name,
       departmentName: departmentsTable.name,
       lecturer: {
         name: usersTable.name,
         image: usersTable.image,
       },
-      createdAt: lessonRostersTable.createdAt,
+      createdAt: coursesTable.createdAt,
     })
     .from(userToDepartmentsTable)
     .innerJoin(
@@ -128,11 +122,8 @@ async function getDepartmentClasses(userId: string) {
       subjectsTable,
       eq(subjectsTable.departmentId, departmentsTable.id)
     )
-    .innerJoin(
-      lessonRostersTable,
-      eq(lessonRostersTable.subjectId, subjectsTable.id)
-    )
-    .innerJoin(usersTable, eq(lessonRostersTable.lecturerId, usersTable.id))
+    .innerJoin(coursesTable, eq(coursesTable.subjectId, subjectsTable.id))
+    .innerJoin(usersTable, eq(coursesTable.lecturerId, usersTable.id))
     .where(
       and(
         eq(userToDepartmentsTable.userId, userId),

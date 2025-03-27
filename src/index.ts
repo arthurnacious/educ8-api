@@ -6,7 +6,7 @@ import auditLogs from "./routes/audit-logs";
 import classes from "./routes/classes";
 import subjects from "./routes/subjects";
 import departments from "./routes/departments";
-import lessonRosters from "./routes/lesson-rosters";
+import courses from "./routes/courses";
 import personal from "./routes/personal";
 import users from "./routes/users";
 import db from "./db";
@@ -23,7 +23,7 @@ app
   .route("/classes", classes)
   .route("/subjects", subjects)
   .route("/departments", departments)
-  .route("/lesson-rosters", lessonRosters)
+  .route("/courses", courses)
   .route("/personal", personal)
   .route("/users", users)
   .get("/test", async (c) => {
