@@ -5,6 +5,7 @@
     "db": "bun drizzle-kit generate && bun drizzle-kit migrate",
     "generate": "bun drizzle-kit generate",
     "migrate": "bun drizzle-kit migrate",
+    "push": "bun drizzle-kit push",
     "seed": "bun run src/db/seeds/index.ts"
   },
   "dependencies": {

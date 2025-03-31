@@ -1,6 +1,5 @@
 import { Context, Next } from "hono";
 import { jwt } from "hono/jwt";
-import type { JwtVariables } from "hono/jwt";
 
 // Custom error-handling middleware
 export const authMiddleware = async (c: Context, next: Next) => {

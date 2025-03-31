@@ -91,7 +91,7 @@ export const subjectsTable = pgTable("subjects", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  departmentId: uuid("departmentId")
+  departmentId: uuid("department_id")
     .notNull()
     .references(() => departmentsTable.id, {
       onDelete: "cascade",
@@ -116,7 +116,7 @@ export const fields = pgTable("field", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  subjectId: uuid("subjectId")
+  subjectId: uuid("subject_id")
     .notNull()
     .references(() => subjectsTable.id, {
       onDelete: "cascade",
@@ -130,13 +130,13 @@ export const coursesTable = pgTable("courses", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  subjectId: uuid("subjectId")
+  subjectId: uuid("subject_id")
     .notNull()
     .references(() => subjectsTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  lecturerId: uuid("lecturerId")
+  lecturerId: uuid("lecturer_id")
     .notNull()
     .references(() => usersTable.id, {
       onDelete: "cascade",
@@ -158,13 +158,13 @@ export const paymentsTable = pgTable("payments", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  userId: uuid("userId")
+  userId: uuid("user_id")
     .notNull()
     .references(() => usersTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  classId: uuid("classId")
+  classId: uuid("class_id")
     .notNull()
     .references(() => coursesTable.id, {
       onDelete: "cascade",
@@ -182,7 +182,7 @@ export const marksTable = pgTable("marks", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  courseId: uuid("courseId")
+  courseId: uuid("course_id")
     .notNull()
     .references(() => coursesTable.id, {
       onDelete: "cascade",
@@ -190,7 +190,7 @@ export const marksTable = pgTable("marks", {
     }),
   name: text("name").notNull(),
   passRate: numeric("passRate", { precision: 10, scale: 2 }).notNull(),
-  studentId: uuid("studentId")
+  studentId: uuid("student_id")
     .notNull()
     .references(() => usersTable.id, {
       onDelete: "cascade",
@@ -203,7 +203,7 @@ export const sessionsTable = pgTable("sessions", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  courseId: uuid("courseId")
+  courseId: uuid("course_id")
     .notNull()
     .references(() => coursesTable.id, {
       onDelete: "cascade",
@@ -242,13 +242,13 @@ export const attendanceTable = pgTable("attendances", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  studentId: uuid("studentId")
+  studentId: uuid("student_id")
     .notNull()
     .references(() => usersTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  periodId: uuid("periodId")
+  periodId: uuid("period_id")
     .notNull()
     .references(() => sessionsTable.id, {
       onDelete: "cascade",
@@ -262,13 +262,13 @@ export const attendanceTable = pgTable("attendances", {
 export const enrollmentsTable = pgTable(
   "enrollments",
   {
-    studentId: uuid("studentId")
+    studentId: uuid("student_id")
       .notNull()
       .references(() => usersTable.id, {
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    courseId: uuid("classId")
+    courseId: uuid("class_id")
       .notNull()
       .references(() => coursesTable.id, {
         onDelete: "cascade",
@@ -283,13 +283,13 @@ export const enrollmentsTable = pgTable(
 export const userToDepartmentsTable = pgTable(
   "userToDepartment",
   {
-    departmentId: uuid("departmentId")
+    departmentId: uuid("department_id")
       .notNull()
       .references(() => departmentsTable.id, {
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    userId: uuid("userId")
+    userId: uuid("user_id")
       .notNull()
       .references(() => usersTable.id, {
         onDelete: "cascade",
@@ -310,13 +310,13 @@ export const userToDepartmentsTable = pgTable(
 export const guardianDependantsTable = pgTable(
   "guardianToDependents",
   {
-    guardianId: uuid("guardianId") // Clearly denotes a guardian
+    guardianId: uuid("guardian_id") // Clearly denotes a guardian
       .notNull()
       .references(() => usersTable.id, {
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    dependentId: uuid("dependentId")
+    dependentId: uuid("dependent_id")
       .notNull()
       .references(() => usersTable.id, {
         onDelete: "cascade",
