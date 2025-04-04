@@ -180,6 +180,16 @@ departments
       return ctx.json({ error: "Internal Server Error" }, 500);
     }
   })
+  .get("/roles", async (ctx) => {
+    const data = await db.query.departmentRolesTable.findMany({
+      columns: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return ctx.json({ data });
+  })
   .get("/:slug", async (ctx) => {
     const { slug } = ctx.req.param();
 
@@ -193,6 +203,12 @@ departments
                 id: true,
                 name: true,
                 email: true,
+              },
+            },
+            role: {
+              columns: {
+                id: true,
+                name: true,
               },
             },
           },
