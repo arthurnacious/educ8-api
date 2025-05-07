@@ -25,14 +25,14 @@ export async function permissionsTableSeeder(
   console.log(`Seeding ${count} permissions in batches of ${batch}...`);
 
   const permissions = [
-    // Classes Permissions
-    "can_create_classes",
-    "can_delete_classes",
-    "can_edit_classes",
-    "can_view_classes",
-    "can_view_classes_attendance",
-    "can_view_classes_enrollment",
-    "can_view_classes_grades",
+    // courses Permissions
+    "can_create_courses",
+    "can_delete_courses",
+    "can_edit_courses",
+    "can_view_courses",
+    "can_view_courses_attendance",
+    "can_view_courses_enrollment",
+    "can_view_courses_grades",
 
     // Subjects Permissions
     "can_create_subjects",

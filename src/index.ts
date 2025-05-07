@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 
 import auth from "./routes/auth";
 import auditLogs from "./routes/audit-logs";
-import classes from "./routes/classes";
+import courses from "./routes/courses";
 import subjects from "./routes/subjects";
 import departments from "./routes/departments";
 import courses from "./routes/courses";
@@ -20,7 +20,7 @@ app
   })
   .route("/auth", auth)
   .route("/audit-logs", auditLogs)
-  .route("/classes", classes)
+  .route("/courses", courses)
   .route("/subjects", subjects)
   .route("/departments", departments)
   .route("/courses", courses)

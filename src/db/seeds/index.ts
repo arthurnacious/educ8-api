@@ -113,7 +113,7 @@ async function seed(options: SeedOptions = {}) {
 
   if (enrollments > 0) {
     console.log(`\n--- Seeding ${enrollments} enrollments ---`);
-    await enrollmentsTableSeeder(enrollemnts, { batch });
+    await enrollmentsTableSeeder(enrollments, { batch });
   }
 
   if (marks > 0) {
@@ -140,7 +140,7 @@ const fields = 10;
 const courses = 40;
 const sessions = 30;
 const attendance = 100;
-const enrollemnts = 300;
+const enrollments = 300;
 const marks = 100;
 const auditLogs = 2000000;
 
@@ -157,7 +157,7 @@ async function main() {
     courses,
     sessions,
     attendance,
-    enrollemnts,
+    enrollments,
     marks,
     auditLogs,
     batch: 1500,

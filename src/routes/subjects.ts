@@ -4,7 +4,7 @@ import { authMiddleware } from "../middleware/auth";
 import db from "@/db";
 import { z } from "zod";
 import { subjectsTable } from "@/db/schema";
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 const subjects = new Hono<{ Variables: JwtVariables }>();
 // subjects.use("*", authMiddleware);
@@ -15,7 +15,11 @@ const deleteSubjectsIds = z.object({
 
 subjects
   .get("/", async (ctx) => {
-    const data = await db.query.subjectsTable.findMany();
+    const data = await db.query.subjectsTable.findMany({
+      with: {
+        department: true,
+      },
+    });
 
     return ctx.json({ data });
   })
@@ -26,10 +30,37 @@ subjects
       where: (subject, { eq }) => eq(subject.slug, slug),
       with: {
         fields: true,
+        department: true,
       },
     });
 
     return ctx.json({ data });
+  })
+  .put("/:slug", async (ctx) => {
+    const { slug } = ctx.req.param();
+    const body = await ctx.req.json();
+
+    const validatedData = z
+      .object({
+        name: z
+          .string()
+          .min(2, { message: "Name must be at least 2 characters." }),
+        description: z.string(),
+        departmentId: z.string(),
+      })
+      .parse(body);
+
+    const updatedSubject = await db
+      .update(subjectsTable)
+      .set({
+        name: validatedData.name,
+        description: validatedData.description,
+        departmentId: validatedData.departmentId,
+      })
+      .where(eq(subjectsTable.slug, slug))
+      .returning();
+
+    return ctx.json({ data: updatedSubject[0] }, 200);
   })
   .patch("/multi-delete", async (ctx) => {
     try {

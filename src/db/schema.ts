@@ -164,7 +164,7 @@ export const paymentsTable = pgTable("payments", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  classId: uuid("class_id")
+  courseId: uuid("cours_id")
     .notNull()
     .references(() => coursesTable.id, {
       onDelete: "cascade",
@@ -268,7 +268,7 @@ export const enrollmentsTable = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    courseId: uuid("class_id")
+    courseId: uuid("cours_id")
       .notNull()
       .references(() => coursesTable.id, {
         onDelete: "cascade",
@@ -387,13 +387,13 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     relationName: "auditLogs",
   }),
 
-  // Classes the user is enrolled in (as a student)
+  // courses the user is enrolled in (as a student)
   enrollments: many(enrollmentsTable),
 
   // User's marks/grades
   marks: many(marksTable, { relationName: "studentMarks" }),
 
-  // Classes created by this user (as a teacher/instructor)
+  // courses created by this user (as a teacher/instructor)
   courses: many(coursesTable, {
     relationName: "presentingCourses",
   }),
@@ -502,7 +502,7 @@ export const rolesTableRelations = relations(rolesTable, ({ many }) => ({
 // Marks Relationships
 export const marksTableRelations = relations(marksTable, ({ one }) => ({
   // Field associated with this mark
-  class: one(coursesTable, {
+  cours: one(coursesTable, {
     fields: [marksTable.courseId],
     references: [coursesTable.id],
   }),
@@ -651,9 +651,9 @@ export const paymentsRelations = relations(paymentsTable, ({ one }) => ({
     relationName: "studentPayments",
   }),
 
-  // class this payment belongs to
-  class: one(coursesTable, {
-    fields: [paymentsTable.classId],
+  // cours this payment belongs to
+  cours: one(coursesTable, {
+    fields: [paymentsTable.courseId],
     references: [coursesTable.id],
   }),
 }));

@@ -16,7 +16,7 @@ import { departmentRole } from "@/types/roles";
 import { de } from "@faker-js/faker/.";
 
 const personal = new Hono<{ Variables: JwtVariables }>();
-personal.get("/classes", authMiddleware, async (ctx) => {
+personal.get("/courses", authMiddleware, async (ctx) => {
   const { id: userId } = ctx.get("jwtPayload");
 
   const dbUser = await db.query.usersTable.findFirst({
@@ -25,20 +25,20 @@ personal.get("/classes", authMiddleware, async (ctx) => {
 
   if (!dbUser) return ctx.json({ error: "User not found" }, 404);
 
-  // Get all relevant classes
-  const presentedClasses = await getPresentedClasses(userId);
+  // Get all relevant courses
+  const presentedcourses = await getPresentedcourses(userId);
 
-  // Note: The original code has 'enrolledClasses' in the response but it's not defined
+  // Note: The original code has 'enrolledcourses' in the response but it's not defined
   // in the provided code. You may need to implement this function separately.
-  const enrolledClasses = await getEnrolledSubjects(userId); // Placeholder for missing data
+  const enrolledcourses = await getEnrolledSubjects(userId); // Placeholder for missing data
 
-  const departmentClasses = await getDepartmentClasses(userId);
+  const departmentcourses = await getDepartmentcourses(userId);
 
   return ctx.json({
     data: {
-      presentedClasses,
-      enrolledClasses,
-      departmentClasses,
+      presentedcourses,
+      enrolledcourses,
+      departmentcourses,
     },
   });
 });
@@ -46,7 +46,7 @@ personal.get("/classes", authMiddleware, async (ctx) => {
 export default personal;
 
 async function getEnrolledSubjects(userId: string) {
-  const enrolledClasses = await db
+  const enrolledcourses = await db
     .select({
       id: coursesTable.id,
       subjectName: subjectsTable.name,
@@ -73,12 +73,12 @@ async function getEnrolledSubjects(userId: string) {
     )
     .where(eq(enrollmentsTable.studentId, userId));
 
-  return enrolledClasses;
+  return enrolledcourses;
 }
 
-// Function to get classes presented by a lecturer
-async function getPresentedClasses(userId: string) {
-  const presentedClasses = await db
+// Function to get courses presented by a lecturer
+async function getPresentedcourses(userId: string) {
+  const presentedcourses = await db
     .select({
       id: coursesTable.id,
       subjectName: subjectsTable.name,
@@ -93,12 +93,12 @@ async function getPresentedClasses(userId: string) {
     ) // Join departmentsTable on departmentId
     .where(eq(coursesTable.lecturerId, userId));
 
-  return presentedClasses;
+  return presentedcourses;
 }
 
-// Function to get classes for a department lead
-async function getDepartmentClasses(userId: string) {
-  const departmentClasses = await db
+// Function to get courses for a department lead
+async function getDepartmentcourses(userId: string) {
+  const departmentcourses = await db
     .select({
       id: coursesTable.id,
       subjectName: subjectsTable.name,
@@ -131,5 +131,5 @@ async function getDepartmentClasses(userId: string) {
       )
     );
 
-  return departmentClasses;
+  return departmentcourses;
 }

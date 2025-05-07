@@ -6,19 +6,19 @@ import { enrollmentsTable, coursesTable, marksTable } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
-const classes = new Hono<{ Variables: JwtVariables }>();
-classes.use("*", authMiddleware);
+const courses = new Hono<{ Variables: JwtVariables }>();
+courses.use("*", authMiddleware);
 
-const removeSTudentsFromClass = z.object({
+const removeSTudentsFromcours = z.object({
   studentIds: z.array(z.string()),
 });
 
-classes
+courses
   .get("/:id", async (ctx) => {
     const { id } = ctx.req.param();
 
     const data = await db.query.coursesTable.findFirst({
-      where: (classData, { eq }) => eq(classData.id, id),
+      where: (coursData, { eq }) => eq(coursData.id, id),
       with: {
         enrollments: {
           with: {
@@ -30,7 +30,7 @@ classes
               with: {
                 payments: {
                   where: (payments, { eq }) =>
-                    eq(payments.classId, coursesTable.id),
+                    eq(payments.courseId, coursesTable.id),
                 },
                 attendance: {
                   where: (attendance, { eq }) =>
@@ -52,11 +52,11 @@ classes
 
     return ctx.json({ data });
   })
-  .patch("/:classId", async (ctx) => {
-    const { classId } = ctx.req.param();
+  .patch("/:courseId", async (ctx) => {
+    const { courseId } = ctx.req.param();
     const body = ctx.req.json();
 
-    const validatedData = removeSTudentsFromClass.parse(body);
+    const validatedData = removeSTudentsFromcours.parse(body);
 
     const transaction = await db.transaction(async (tx) => {
       // First delete from enrollments table
@@ -65,7 +65,7 @@ classes
         .where(
           and(
             inArray(enrollmentsTable.studentId, validatedData.studentIds),
-            eq(enrollmentsTable.courseId, classId)
+            eq(enrollmentsTable.courseId, courseId)
           )
         )
         .returning();
@@ -75,7 +75,7 @@ classes
         .where(
           and(
             inArray(marksTable.studentId, validatedData.studentIds),
-            eq(marksTable.courseId, classId)
+            eq(marksTable.courseId, courseId)
           )
         )
         .returning();
@@ -86,4 +86,4 @@ classes
     return ctx.json({ data: transaction });
   });
 
-export default classes;
+export default courses;

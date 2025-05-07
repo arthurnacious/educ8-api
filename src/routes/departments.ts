@@ -30,7 +30,9 @@ const assignUserToDepartmentSchema = z.object({
   departmentId: z.string().min(1, {
     message: "Department Must be selected",
   }),
-  departmentRole: z.nativeEnum(departmentRole).default(departmentRole.LECTURER),
+  departmentRoleId: z.string().min(1, {
+    message: "Role Must be selected",
+  }),
 });
 
 const unassignUsersToDeprtmentSchema = z.object({
@@ -212,6 +214,7 @@ departments
               },
             },
           },
+          // orderBy: (members, { desc }) => desc(members.user.name),
         },
         subjects: {
           columns: {
@@ -263,19 +266,40 @@ departments
         return ctx.json({ error: validatedData.error.format() }, 400);
       }
 
-      const { userId, departmentId, departmentRole } = validatedData.data;
+      const { userId, departmentId, departmentRoleId } = validatedData.data;
 
-      const [{ id: departmentRoleId }] =
-        await db.query.departmentRolesTable.findMany({
-          where: (departmentRolesTable, { eq }) =>
-            eq(departmentRolesTable.name, departmentRole),
-        });
-
-      const data = await db.insert(userToDepartmentsTable).values({
-        userId,
-        departmentId,
-        departmentRoleId,
+      // Check if record exists
+      const existing = await db.query.userToDepartmentsTable.findFirst({
+        where: and(
+          eq(userToDepartmentsTable.userId, userId),
+          eq(userToDepartmentsTable.departmentId, departmentId)
+        ),
       });
+
+      console.log({ departmentRoleId, existing });
+
+      let data;
+
+      if (existing) {
+        // Update if it exists
+        data = await db
+          .update(userToDepartmentsTable)
+          .set({ departmentRoleId })
+          .where(
+            and(
+              eq(userToDepartmentsTable.userId, userId),
+              eq(userToDepartmentsTable.departmentId, departmentId)
+            )
+          );
+        console.log({ data });
+      } else {
+        // Insert if it doesn't exist
+        data = await db.insert(userToDepartmentsTable).values({
+          userId,
+          departmentId,
+          departmentRoleId,
+        });
+      }
 
       return ctx.json({ data }, 200);
     } catch (error) {
